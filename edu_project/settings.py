@@ -303,13 +303,6 @@ CACHE_MIDDLEWARE_KEY_PREFIX = "eduvillage"
 # Integrated Brevo API SDK via Adapter. SMTP is no longer required.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# EMAIL_HOST = 'smtp-relay.brevo.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_USE_SSL = False
-# EMAIL_TIMEOUT = 10
-# EMAIL_HOST_USER = 'a1dcf0001@smtp-brevo.com'
-# EMAIL_HOST_PASSWORD = 'xsmtpsib-f6b6cbb6b0757765c23454efb1779933044871c5074ea00df65119a122d558db-A9u4b9tlckWTy8As'
 
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 
