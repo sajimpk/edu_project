@@ -40,16 +40,21 @@ SECRET_KEY = 'django-insecure-0qtv8zk_mev0a_18znc%tobp8qbyz2hin=6yjq=6up02%rd%4c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
+hosts_env = os.getenv("ALLOWED_HOSTS", "")
+host = [h.strip() for h in hosts_env.split(",") if h.strip()]
+
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "eduvillage.online",
-    "www.eduvillage.online"
+    "www.eduvillage.online",
+    *host
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://eduvillage.online",
-    "https://www.eduvillage.online"
+    "https://www.eduvillage.online",
+    *[f"https://{h}" for h in host]
 ]
 # Application definition
 
