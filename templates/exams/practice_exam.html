@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Practice | Instant Review - Education Village{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate__animated animate__fadeIn">
+    <div class="col-lg-10">
+        
+        <div id="results">
+            <!-- Dynamic Header -->
+            <div class="premium-card bg-white mb-5 shadow-lg p-4 p-md-5">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+                    <div>
+                        <div class="badge bg-primary rounded-pill mb-2 px-3">Practice Session</div>
+                        <h1 class="fw-black text-dark mb-1">{{ result.subject }}</h1>
+                        <p class="text-muted mb-0 fw-medium">Practice questions for: <span class="text-primary">{{ result.level }}</span></p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button onclick="window.print()" class="btn btn-outline-premium rounded-4 px-4">
+                            <i class="bi bi-printer me-2"></i>Export
+                        </button>
+                        <a href="{% url 'generate_test' %}" class="btn btn-premium rounded-4 px-4">
+                            <i class="bi bi-arrow-repeat me-2"></i>New Test
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="premium-card bg-white mb-5 p-4 p-md-5 border-0 shadow-sm">
+                <form id="guest-exam-form">
+                    {% for q in result.questions %}
+                    <div class="mb-5 pb-5 border-bottom last-no-border" id="card_{{ forloop.counter }}">
+                        <div class="d-flex align-items-start gap-4 mb-4">
+                            <div class="bg-dark text-white rounded-pill d-flex align-items-center justify-content-center fw-black" style="width: 40px; height: 40px; min-width: 40px; font-size: 0.8rem;">
+                                {{ forloop.counter }}
+                            </div>
+                            <h4 class="fw-bold text-dark lh-base mt-1">{{ q.question|safe }}</h4>
+                        </div>
+                        
+                        {% if read_only %}
+                            <div class="alert bg-warning bg-opacity-10 border-warning border-opacity-25 rounded-4 text-center fw-bold text-warning-emphasis mb-4">
+                                <i class="bi bi-lock-fill me-2"></i>Review Only: Login to answer questions.
+                            </div>
+                        {% endif %}
+
+                        <div class="ps-md-5">
+                            {% if q.options %}
+                                <div class="row g-3">
+                                {% for opt in q.options %}
+                                    <div class="col-md-6">
+                                        <input class="btn-check" type="radio" 
+                                               name="q{{ forloop.parentloop.counter }}" 
+                                               id="q{{ forloop.parentloop.counter }}_{{ forloop.counter }}" 
+                                               value="{{ opt }}" 
+                                               onchange="checkGuestAnswer('{{ forloop.parentloop.counter }}', '{{ opt|escapejs }}', '{{ q.correct_answer|escapejs }}', '{{ q.explanation|escapejs }}')"
+                                               {% if read_only %}disabled{% endif %}>
+                                        <label class="btn btn-outline-light text-dark text-start w-100 p-4 rounded-4 border-2 transition-all fw-semibold" for="q{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                                            {{ opt|safe }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="input-group">
+                                    <input type="text" class="form-control form-control-lg bg-light border-0 rounded-start-4 p-3 shadow-none fw-bold" 
+                                           id="input_{{ forloop.counter }}" 
+                                           placeholder="Type your answer here..." 
+                                           onkeydown="if(event.key==='Enter') checkGuestInput('{{ forloop.counter }}', '{{ q.correct_answer|escapejs }}', '{{ q.explanation|escapejs }}')"
+                                           {% if read_only %}disabled{% endif %}>
+                                    <button class="btn btn-premium px-5 rounded-end-4" type="button" 
+                                            onclick="checkGuestInput('{{ forloop.counter }}', '{{ q.correct_answer|escapejs }}', '{{ q.explanation|escapejs }}')"
+                                            {% if read_only %}disabled{% endif %}>Check Answer</button>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Feedback Area -->
+                            <div id="feedback_{{ forloop.counter }}" class="mt-4 animate__animated animate__fadeIn" style="display: none;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </form>
+            </div>
+
+            <div class="text-center mb-5 pb-5">
+                <p class="text-muted fw-bold mb-4">Ready for another test?</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'generate_test' %}" class="btn btn-premium btn-lg px-5 py-3 rounded-4 shadow-2xl">
+                        Create New Test
+                    </a>
+                    <a href="{% url 'index' %}" class="btn btn-outline-premium btn-lg px-5 py-3 rounded-4">
+                        Exit Practice
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function checkGuestInput(id, correct, explanation) {
+    let input = document.getElementById('input_' + id);
+    checkGuestAnswer(id, input.value, correct, explanation);
+}
+
+function checkGuestAnswer(id, selected, correct, explanation) {
+    let clean = (s) => s.replace(/^[a-zA-Z0-9][\.\)]\s*/, '').trim().toLowerCase();
+    let u_clean = clean(selected);
+    let c_clean = clean(correct);
+    
+    let isCorrect = (u_clean === c_clean || u_clean.includes(c_clean) || c_clean.includes(u_clean));
+    let feedbackDiv = document.getElementById('feedback_' + id);
+    feedbackDiv.style.display = 'block';
+    
+    if (isCorrect) {
+         feedbackDiv.className = 'alert bg-success bg-opacity-10 text-success rounded-4 border-0 p-4 animate__animated animate__lightSpeedInRight';
+         feedbackDiv.innerHTML = '<div class="d-flex align-items-center gap-3"><i class="bi bi-patch-check-fill fs-3"></i><div><h6 class="fw-black mb-0">CORRECT!</h6><p class="small mb-0 opacity-75">Your answer is correct.</p></div></div>';
+    } else {
+         feedbackDiv.className = 'alert bg-danger bg-opacity-10 text-danger rounded-4 border-0 p-4 animate__animated animate__headShake';
+         feedbackDiv.innerHTML = '<div class="mb-3 d-flex align-items-center gap-3"><i class="bi bi-exclamation-octagon-fill fs-3"></i><h6 class="fw-black mb-0">INCORRECT</h6></div><div class="mb-2"><span class="small opacity-50 fw-bold">CORRECT ANSWER:</span> <span class="fw-black">' + correct + '</span></div><div class="p-3 bg-white bg-opacity-50 rounded-3 small">' + explanation + '</div>';
+    }
+}
+</script>
+
+<style>
+    .btn-check:checked + .btn-outline-light {
+        background-color: var(--primary) !important;
+        color: white !important;
+        border-color: var(--primary) !important;
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+    }
+    .btn-outline-light {
+        background-color: #f8fafc;
+        border-color: #e2e8f0;
+    }
+    .last-no-border:last-child {
+        border-bottom: none !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+</style>
+{% endblock %}

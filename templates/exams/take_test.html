@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Question Bank & Practice Tests - Education Village{% endblock %}
+{% block meta_description %}
+<meta name="description" content="Access thousands of questions for IELTS, HSC, BCS, and other exams. Filter by subject, level, and question type to create a customized mock test dynamically.">
+{% endblock %}
+{% block meta_keywords %}
+<meta name="keywords" content="question bank bangladesh, ielts practice test online, bcs question bank, hsc objective questions, mock test generator, free mock test for bcs">
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        
+        <div class="text-center mb-5">
+            <h1 class="fw-bold text-gradient mb-2">Practice with Questions</h1>
+            <p class="text-muted">আপনার পছন্দমতো বিষয় সিলেক্ট করে প্রস্তুতি শুরু করুন। (Database-এ যেসব বিষয় আছে এখানে সেগুলোই দেখাবে)</p>
+        </div>
+         <!-- Tool Section (Advanced Filter) -->
+        <section class="card shadow-lg p-4 border-0 mb-5 rounded-4 position-relative overflow-hidden" style="background: linear-gradient(to bottom, #ffffff, #fcfcfc);">
+            <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                <i class="bi bi-funnel-fill fs-1 text-primary"></i>
+            </div>
+            <div class="card-body position-relative">
+                <form method="post" id="testForm" action="{% url 'take_test' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="page" id="page_input" value="">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.subject|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.level|as_crispy_field }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            {{ form.question_type|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <script>
+                        function startTest(page) {
+                            document.getElementById('page_input').value = page;
+                            document.getElementById('testForm').submit();
+                        }
+
+                        // Dependent Dropdowns Logic
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const subjectSelect = document.getElementById('id_subject');
+                            const levelSelect = document.getElementById('id_level');
+                            const typeSelect = document.getElementById('id_question_type');
+
+                            if (subjectSelect) {
+                                subjectSelect.addEventListener('change', function() {
+                                    const subject = this.value;
+                                    if (!subject) {
+                                        // Reset if no subject selected
+                                        return;
+                                    }
+
+                                    // Show loading state if needed
+                                    levelSelect.innerHTML = '<option value="Any">Loading Levels...</option>';
+                                    typeSelect.innerHTML = '<option value="Any">Loading Types...</option>';
+
+                                    fetch(`?ajax=true&subject=${encodeURIComponent(subject)}`, {
+                                        headers: {
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        }
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        // Update Level Dropdown
+                                        levelSelect.innerHTML = '<option value="Any">Any Level</option>';
+                                        data.levels.forEach(level => {
+                                            const option = document.createElement('option');
+                                            option.value = level;
+                                            option.textContent = level;
+                                            levelSelect.appendChild(option);
+                                        });
+
+                                        // Update Type Dropdown
+                                        typeSelect.innerHTML = '<option value="Any">Any Type</option>';
+                                        data.types.forEach(type => {
+                                            const option = document.createElement('option');
+                                            option.value = type;
+                                            option.textContent = type;
+                                            typeSelect.appendChild(option);
+                                        });
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching dynamic filters:', error);
+                                        levelSelect.innerHTML = '<option value="Any">Any Level</option>';
+                                        typeSelect.innerHTML = '<option value="Any">Any Type</option>';
+                                    });
+                                });
+                            }
+                        });
+                    </script>
+
+
+
+
+                    {% if tests_range %}
+                        <div class="mt-4 animate__animated animate__fadeIn border-top pt-4">
+                            <h5 class="fw-bold text-center mb-3">Found {{ total_questions }} questions for <u>{{ selected_subject }}</u>. Choose a Test:</h5>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                {% for i in tests_range %}
+                                    {% if user.is_authenticated %}
+                                         {% if limit_msg %}
+                                             <button type="button" onclick="alert('{{ limit_msg }}'); window.location.href='{% url 'upgrade' %}'"
+                                                 class="btn btn-outline-danger px-4 py-2 rounded-pill fw-bold">
+                                                 Test {{ i }} <i class="bi bi-lock-fill ms-1"></i>
+                                             </button>
+                                         {% else %}
+                                             <button type="button" onclick="startTest({{ i }})"
+                                                 class="btn btn-outline-primary px-4 py-2 rounded-pill fw-bold shadow-sm">
+                                                 Test {{ i }}
+                                             </button>
+                                         {% endif %}
+                                    {% else %}
+                                        <button type="button" 
+                                            {% if i == 1 %}
+                                                onclick="startTest({{ i }})" 
+                                            {% else %}
+                                                onclick="alert('Please login to access Test {{ i }}!'); window.location.href='{% url 'account_login' %}';"
+                                            {% endif %}
+                                            class="btn btn-outline-primary px-4 py-2 rounded-pill fw-bold shadow-sm">
+                                            Test {{ i }} 
+                                            {% if i == 1 %}
+                                                <i class="bi bi-eye-fill ms-1" title="Preview Only"></i>
+                                            {% else %}
+                                                <i class="bi bi-lock-fill ms-1" title="Login Required"></i>
+                                            {% endif %}
+                                        </button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="{% url 'take_test' %}" class="btn btn-sm text-muted rounded-pill border">Clear Search & Filter</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" id="btn-find" class="btn btn-primary btn-lg shadow-sm rounded-pill fw-bold hover-scale" onclick="this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Searching...';">
+                                <i class="bi bi-search me-2"></i>Find Questions
+                            </button>
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
+        </section>
+
+        {% if all_subjects %}
+        <div class="mb-5 animate__animated animate__zoomIn">
+            <div class="d-flex align-items-center justify-content-center mb-4">
+                <hr class="flex-grow-1">
+                <span class="mx-3 fw-bold text-muted small text-uppercase letter-spacing-1">বই বা বিষয় বেছে নিন (Select Subject)</span>
+                <hr class="flex-grow-1">
+            </div>
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+                {% for sub in all_subjects %}
+                    <a href="?subject={{ sub.subject }}" 
+                       class="btn {% if selected_subject == sub.subject %}btn-primary shadow{% else %}btn-outline-primary{% endif %} px-4 py-3 rounded-4 fw-bold shadow-sm hover-scale transition-all d-flex align-items-center mb-2"
+                       style="min-width: 180px;">
+                        <div class="bg-white rounded-circle p-2 me-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <i class="bi bi-journal-check text-primary"></i>
+                        </div>
+                        <div class="text-start">
+                            <span class="d-block">{{ sub.subject }}</span>
+                            <small class="{% if selected_subject == sub.subject %}text-white-50{% else %}text-muted{% endif %} fw-normal">{{ sub.count }}টি প্রশ্ন আছে</small>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+
+         {% if error %}
+                <div class="alert alert-danger shadow-sm rounded-4 border-0 animate__animated animate__fadeInUp mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                        <span class="fw-bold">{{ error }}</span>
+                    </div>
+                </div>
+            {% endif %}
+
+       
+
+        <!-- Messages & Alerts -->
+        <div class="mt-4">
+            {% if limit_msg %}
+                <div class="alert alert-danger text-center fw-bold shadow-sm animate__animated animate__fadeInUp mb-3 rounded-4 border-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ limit_msg }}
+                    <a href="{% url 'upgrade' %}" class="btn btn-sm btn-light text-danger ms-3 shadow-sm rounded-pill fw-bold">Upgrade / Pay Now</a>
+                </div>
+            {% endif %}
+
+           
+        </div>
+
+        <!-- Stats -->
+        <div class="text-center text-muted small mt-2">
+            <i class="bi bi-info-circle me-1"></i>Each test has 20 random questions from the database.
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .text-gradient {
+        background: var(--gradient-main);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .transition-all { transition: all 0.3s ease; }
+    .letter-spacing-1 { letter-spacing: 1px; }
+    .rounded-4 { border-radius: 1rem !important; }
+    .hover-scale:hover { transform: scale(1.05); }
+</style>
+
+
+{% endblock %}

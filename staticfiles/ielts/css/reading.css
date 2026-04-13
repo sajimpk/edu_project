@@ -1,0 +1,14 @@
+.reading-container{display:flex;gap:16px;padding:16px}
+.reading-left{flex:1;border-right:1px solid #ddd;padding-right:12px}
+.reading-right{width:520px;overflow:auto;padding-left:12px}
+.passage-content{background:#fff;padding:12px;border:1px solid #eee;line-height:1.5}
+.questions-panel .question{border-bottom:1px dashed #eee;padding:8px 0}
+.q-header{font-size:14px}
+.notes-panel{position:fixed;right:24px;top:80px;width:320px;background:#f8f9fa;border:1px solid #ddd;padding:8px;max-height:60vh;overflow:auto}
+.reading-topbar{background:#f1f3f5;padding:8px 0;border-bottom:1px solid #ddd}
+.note-item{padding:6px;border-bottom:1px solid #eee}
+
+/* locator highlighting */
+.locator{background:transparent;color:#2b6b2b;padding:0 4px;border-radius:4px}
+.locator-highlight{background:yellow}
+

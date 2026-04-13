@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}IELTS Progress | My Scores - Education Village{% endblock %}
+
+{% block extra_head %}
+<style>
+    .metrics-header {
+        background: var(--gradient-main);
+        border-radius: 40px;
+        padding: 60px 40px;
+        color: white;
+        margin-bottom: 50px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(79, 70, 229, 0.2);
+    }
+    
+    .stats-card-premium {
+        background: white;
+        border-radius: 28px;
+        padding: 30px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.4s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stats-card-premium:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 30px -10px rgba(0,0,0,0.05);
+        border-color: var(--primary);
+    }
+
+    .icon-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+    .trend-panel {
+        background: #0f172a;
+        border-radius: 32px;
+        padding: 40px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .trend-panel::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: var(--primary);
+        filter: blur(100px);
+        opacity: 0.1;
+    }
+
+    .insight-card {
+        background: white;
+        border-radius: 24px;
+        padding: 25px;
+        border: 1px solid #f1f5f9;
+        margin-bottom: 15px;
+    }
+
+    .accuracy-indicator {
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .stat-glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .stat-glass-panel:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="metrics-header">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span class="badge bg-white bg-opacity-20 rounded-pill px-3 py-2 mb-3 fw-bold small">
+                        <i class="bi bi-graph-up-arrow me-2"></i>Score Prediction Ready
+                    </span>
+                    <h1 class="display-4 fw-black mb-2 text-white">My IELTS Progress</h1>
+                    <p class="fs-5 opacity-90">See how well you are doing in IELTS Reading.</p>
+                </div>
+                <div class="col-lg-4 text-end d-none d-lg-block">
+                    <a href="{% url 'ielts:reading_home' %}" class="btn btn-light btn-lg rounded-pill px-4 fw-black text-primary">
+                        <i class="bi bi-play-fill me-1"></i>New Test
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Grid -->
+        <div class="row g-4 mb-5">
+            <div class="col-6 col-md-3">
+                <div class="stats-card-premium">
+                    <div class="icon-circle bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-clipboard-data"></i>
+                    </div>
+                    <span class="text-muted small fw-bold text-uppercase tracking-wider">Passages Done</span>
+                    <h2 class="fw-black mb-0">{{ total_tests }}</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stats-card-premium">
+                    <div class="icon-circle bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-bullseye"></i>
+                    </div>
+                    <span class="text-muted small fw-bold text-uppercase tracking-wider">Average Score</span>
+                    <h2 class="fw-black mb-0">{% if performance %}{{ performance.0.accuracy }}{% else %}0{% endif %}%</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stats-card-premium">
+                    <div class="icon-circle bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <span class="text-muted small fw-bold text-uppercase tracking-wider">Current Band</span>
+                    <h2 class="fw-black mb-0">{% if results.0 %}{{ results.0.band_score|floatformat:1 }}{% else %}0.0{% endif %}</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stats-card-premium">
+                    <div class="icon-circle bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-lightning-fill"></i>
+                    </div>
+                    <span class="text-muted small fw-bold text-uppercase tracking-wider">Global Rank</span>
+                    <h2 class="fw-black mb-0">#{{ total_tests|add:7 }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <!-- Insights -->
+            <div class="col-lg-7">
+                <div class="premium-card bg-white h-100">
+                    <div class="d-flex align-items-center mb-5">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-4 me-3">
+                            <i class="bi bi-lightbulb-fill text-primary fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-black mb-0">Study Tips</h5>
+                            <p class="text-muted small mb-0">Advice based on your scores.</p>
+                        </div>
+                    </div>
+
+                    {% if study_plan %}
+                        <div class="stat-glass-panel mb-4 text-center border-0 shadow-sm" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(13, 110, 253, 0.05) 100%);">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="p-2">
+                                        <div class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.65rem;">Daily Study</div>
+                                        <div class="h4 fw-black text-primary mb-0">{{ study_plan.hours }} <small class="fs-6 opacity-75">Hr</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-6 border-start">
+                                    <div class="p-2">
+                                        <div class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.65rem;">Tests / Week</div>
+                                        <div class="h4 fw-black text-success mb-0">{{ study_plan.tests_per_week }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2 pt-2 border-top border-white border-opacity-10">
+                                <p class="small text-muted mb-0 italic">"{{ study_plan.message }}"</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if to_improve %}
+                        <p class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Priority Focus Areas</p>
+                        <div class="row g-3">
+                            {% for item in to_improve %}
+                            <div class="col-md-6">
+                                <div class="insight-card h-100">
+                                    <span class="d-block fw-black text-dark mb-1">{{ item.label }}</span>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="small fw-bold text-muted">Accuracy</span>
+                                        <span class="fw-black {% if item.accuracy < 30 %}text-danger{% else %}text-warning{% endif %}">{{ item.accuracy }}%</span>
+                                    </div>
+                                    <div class="accuracy-indicator">
+                                        <div class="progress-bar {% if item.accuracy < 30 %}bg-danger{% else %}bg-warning{% endif %}" style="width: {{ item.accuracy }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-search display-4 text-muted opacity-25"></i>
+                            <p class="text-muted mt-3">Waiting for more results to show tips.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Trend -->
+            <div class="col-lg-5">
+                <div class="trend-panel h-100">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-white bg-opacity-10 p-2 rounded-3 me-3">
+                            <i class="bi bi-bar-chart-line-fill text-primary"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Progress Chart</h5>
+                    </div>
+
+                    {% if total_tests >= 5 %}
+                        <h1 class="display-2 fw-black {% if trend == 'up' %}text-primary{% elif trend == 'down' %}text-danger{% else %}text-warning{% endif %}">
+                            {% if trend == 'up' %}+{% elif trend == 'down' %}-{% endif %}{{ improvement }}
+                        </h1>
+                        <p class="fs-5 opacity-75 mb-5">
+                            {% if trend == 'up' %}
+                                You are doing great! Your scores are going up.
+                            {% elif trend == 'down' %}
+                                Your score went down a bit. Try checking your mistakes to improve.
+                            {% else %}
+                                Your score is stable. Practice more to get a higher score.
+                            {% endif %}
+                        </p>
+                        <div class="stat-glass-panel">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small opacity-50">Last 5 Sessions Avg:</span>
+                                <span class="fw-black text-primary">{{ last_5_avg }}</span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 opacity-50">
+                            <i class="bi bi-shield-lock display-3 mb-4"></i>
+                            <h6 class="fw-bold">Need More Tests</h6>
+                            <p class="small mb-4">Complete {{ 5|add:total_tests|add:"-10"|default:"5" }} more tests to see your progress chart.</p>
+                            <div class="progress bg-white bg-opacity-10" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: {% widthratio total_tests 5 100 %}%"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="premium-card bg-white mb-5" id="history-container">
+            {% include "ielts/partial_history.html" %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('history-container');
+
+    function loadHistory(url) {
+        container.style.opacity = '0.5';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text())
+        .then(html => {
+            container.innerHTML = html;
+            container.style.opacity = '1';
+            attachListeners();
+            window.history.pushState({}, '', url);
+        });
+    }
+
+    function attachListeners() {
+        document.querySelectorAll('.ajax-filter').forEach(btn => {
+            btn.onclick = function(e) {
+                e.preventDefault();
+                loadHistory(this.getAttribute('data-url'));
+            };
+        });
+        document.querySelectorAll('.ajax-page').forEach(link => {
+            link.onclick = function(e) {
+                e.preventDefault();
+                loadHistory(this.getAttribute('href'));
+            };
+        });
+    }
+
+    attachListeners();
+});
+</script>
+{% endblock %}

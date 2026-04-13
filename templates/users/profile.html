@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Profile | EduVillage{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --profile-primary: #0ea5e9;
+        --profile-premium: #f59e0b;
+        --profile-verified: #10b981;
+        --profile-bg: #f8fafc;
+    }
+
+    .profile-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .profile-header {
+        background: white;
+        border-radius: 30px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.02);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+        opacity: 0.1;
+    }
+
+    .profile-avatar-wrapper {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
+
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--profile-primary);
+        box-shadow: 0 10px 25px rgba(14, 165, 233, 0.2);
+        border: 4px solid white;
+    }
+
+    .premium-border { border-color: #f59e0b; color: #f59e0b; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3); }
+
+    .profile-info h1 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .badge-premium { background: #fef3c7; color: #d97706; font-size: 0.75rem; padding: 4px 10px; border-radius: 100px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; animation: pulse-gold 2s infinite; }
+    .badge-verified { background: #dcfce7; color: #10b981; font-size: 0.75rem; padding: 4px 10px; border-radius: 100px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+
+    @keyframes pulse-gold { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+    .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+
+    .detail-card { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); transition: all 0.3s ease; }
+    .detail-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
+
+    .edit-section { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); }
+    .form-label { font-weight: 700; color: #475569; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control { border-radius: 12px; padding: 12px 15px; border: 2px solid #f1f5f9; font-weight: 600; }
+    .form-control:focus { border-color: var(--profile-primary); box-shadow: none; }
+
+    .btn-save { background: var(--profile-primary); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; transition: all 0.3s; }
+    .btn-save:hover { background: var(--profile-primary); filter: brightness(0.9); transform: translateY(-2px); }
+
+    @media (max-width: 768px) {
+        .profile-avatar-wrapper { flex-direction: column; text-align: center; }
+        .edit-section { padding: 30px 20px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container animate__animated animate__fadeIn">
+    <!-- Header -->
+    <div class="profile-header">
+        <div class="profile-avatar-wrapper">
+            <div class="avatar-circle {% if profile.subscription_type != 'Free' %}premium-border{% endif %}">
+                {{ user.username|first|upper }}
+            </div>
+            <div class="profile-info">
+                <h1>
+                    {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
+                    {% if profile.subscription_type != 'Free' %}
+                        <span class="badge-premium"><i class="bi bi-patch-check-fill"></i> Premium</span>
+                    {% elif profile.is_email_verified %}
+                        <span class="badge-verified"><i class="bi bi-patch-check-fill"></i> Verified</span>
+                    {% endif %}
+                </h1>
+                <p class="text-secondary fw-medium mb-1"><i class="bi bi-at me-1"></i>{{ user.username }}</p>
+                <div class="d-flex flex-wrap gap-3 mt-2">
+                    <span class="small text-muted"><i class="bi bi-envelope me-1"></i> {{ user.email }}</span>
+                    {% if profile.phone_number %}
+                        <span class="small text-muted"><i class="bi bi-telephone me-1"></i> {{ profile.phone_number }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="details-grid">
+        <div class="detail-card">
+            <div class="text-muted small fw-bold text-uppercase mb-2">Subscription</div>
+            <div class="h4 fw-black text-primary mb-0">{{ profile.subscription_type }}</div>
+            <div class="small text-muted mt-2">Valid: {{ profile.subscription_expiry|date:"M d, Y"|default:"Indefinite" }}</div>
+        </div>
+        <div class="detail-card">
+            <div class="text-muted small fw-bold text-uppercase mb-2">Questions Generated</div>
+            <div class="h4 fw-black text-dark mb-0">{{ profile.monthly_question_count }}</div>
+            <div class="progress mt-3" style="height: 6px; border-radius: 10px;">
+                <div class="progress-bar bg-success" style="width: 45%"></div>
+            </div>
+        </div>
+        <div class="detail-card">
+            <div class="text-muted small fw-bold text-uppercase mb-2">Tests Taken</div>
+            <div class="h4 fw-black text-dark mb-0">{{ profile.ielts_mock_count }}</div>
+            <div class="small text-muted mt-2">Academic & General</div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Form -->
+    <div class="edit-section">
+        <h4 class="fw-black text-dark mb-4"><i class="bi bi-pencil-square me-2 text-primary"></i> Update Your Information</h4>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" placeholder="Your first name">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" placeholder="Your last name">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone_number" class="form-control" value="{{ profile.phone_number|default:'' }}" placeholder="e.g. 017xxxxxxxx">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email Address (Read-only)</label>
+                    <input type="email" class="form-control bg-light" value="{{ user.email }}" readonly>
+                    <div class="form-text">Contact support to change your email.</div>
+                </div>
+                <div class="col-12 mt-5">
+                    <button type="submit" class="btn-save shadow-sm">
+                        <i class="bi bi-cloud-arrow-up-fill me-2"></i> Save Changes
+                    </button>
+                    <a href="{% url 'account_change_password' %}" class="btn btn-link text-decoration-none small text-muted ms-3">
+                        <i class="bi bi-lock me-1"></i> Change Security Password
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

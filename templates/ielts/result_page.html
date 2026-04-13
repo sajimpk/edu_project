@@ -1,0 +1,1014 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    /* Force Full Page Design */
+    header, footer, nav, .navbar, .topbar {
+        display: none !important;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden !important;
+        background-color: #f7f9fb;
+    }
+
+    .result-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        background-color: #f7f9fb;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .exam-header-wrapper {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        min-height: 55px; /* Reduced height */
+        display: flex;
+        flex-direction: column;
+        z-index: 10001;
+    }
+
+    .exam-header-inner {
+        min-height: 46px; /* Reduced to match exam page */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 1.5rem; /* Tighter padding */
+    }
+
+    /* TYLE BADGE */
+    .test-title-badge {
+        display: flex;
+        align-items: center;
+        background: #f8faff;
+        padding: 2px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(13, 110, 253, 0.1);
+    }
+    .test-title-main {
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: -0.1px;
+        background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-transform: capitalize;
+    }
+    .test-title-icon {
+        background: #0d6efd;
+        color: white;
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 6px;
+        font-size: 0.70rem;
+    }
+
+    /* SCORE BADGE */
+    .score-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .score-circle {
+        width: 36px;
+        height: 36px;
+        background: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+    }
+
+    .exam-split-container {
+        display: flex;
+        height: calc(100vh - 60px);
+    }
+
+    .panel-passage {
+        width: 50%;
+        min-width: 200px;
+        background: white;
+        overflow-y: auto;
+        padding: 1.5rem 2rem;
+    }
+
+    .resizer {
+        width: 12px;
+        cursor: col-resize;
+        background-color: #f1f3f5;
+        z-index: 10;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-left: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+    }
+
+    .resizer::after {
+        content: "⋮";
+        color: #adb5bd;
+        font-size: 1.4rem;
+        font-weight: 900;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+
+    .resizer:hover, .resizer.resizing {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .resizer:hover::after, .resizer.resizing::after {
+        color: #fff;
+    }
+
+    .panel-questions {
+        flex: 1;
+        background: white;
+        overflow-y: auto;
+        padding: 1.5rem 2rem;
+        font-size: 0.9rem;
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .section-container {
+        background: white;
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Mobile Responsive Layout */
+    @media (max-width: 991px) {
+        .exam-split-container {
+            flex-direction: column !important;
+        }
+        .panel-passage {
+            width: 100% !important;
+            height: 40% !important;
+            min-height: 250px;
+            border-bottom: 2px solid #adb5bd;
+            border-right: none !important;
+            flex-shrink: 0;
+        }
+        .panel-questions {
+            width: 100% !important;
+            height: 60% !important;
+            border-left: none !important;
+        }
+        .resizer {
+            display: none !important;
+        }
+    }
+
+    .question-review-card {
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        position: relative;
+        border-left: 5px solid #dee2e6;
+        transition: all 0.2s ease;
+        font-size: 0.88rem;
+    }
+
+    .question-text-content p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Make all images responsive inside passages and questions */
+    .panel-passage img, .panel-questions img, .section-container img {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain;
+    }
+
+    /* Support for tables from CKEditor */
+    .panel-passage table, .section-container table, .question-review-card table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 15px 0;
+        font-size: 0.9rem;
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .panel-passage table th, .panel-passage table td,
+    .section-container table th, .section-container table td,
+    .question-review-card table th, .question-review-card table td {
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+        text-align: left;
+    }
+    .panel-passage table th, .section-container table th, .question-review-card table th {
+        background-color: #f8f9fa;
+        font-weight: 700;
+    }
+    .panel-passage table tr:nth-child(even), .section-container table tr:nth-child(even), .question-review-card table tr:nth-child(even) {
+        background-color: #fafafa;
+    }
+
+    .ans-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 800;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .ans-text {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .text-user { color: #2c5282; }
+    .text-correct { color: #276749; }
+
+    .choice-item {
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 15px;
+        margin-bottom: 8px;
+        cursor: default;
+        transition: all 0.2s;
+        font-weight: 500;
+        background: white;
+        font-size: 0.9rem;
+    }
+    .choice-item.selected {
+        border-color: #e53e3e; 
+        background-color: #fff5f5;
+        color: #c53030;
+    }
+    .choice-item.correct-choice {
+        border-color: #38a169;
+        background-color: rgba(56, 161, 105, 0.05); /* Very light green */
+        color: #38a169;
+        opacity: 0.65; /* Lower opacity for unselected correct answers */
+        font-weight: 600;
+    }
+    .choice-item.selected.correct-choice {
+        border-color: #38a169 !important;
+        background-color: #f0fff4 !important; /* Normal green for selected correct */
+        color: #22543d !important;
+        opacity: 1 !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 6px rgba(56, 161, 105, 0.15);
+    }
+
+    /* Clean Auto-Resizing Blank Input Style */
+    .ielts-inline-input, .blank-input {
+        border: none !important;
+        border-bottom: 2px solid #adb5bd !important;
+        border-radius: 0 !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        background-color: transparent !important;
+        outline: none !important;
+        padding: 0 4px !important;
+        margin: 0 4px !important;
+        line-height: inherit !important;
+        vertical-align: baseline !important;
+        display: inline-block !important;
+        min-width: 30px !important;
+        text-align: center !important;
+        font-size: inherit !important;
+        height: auto !important;
+        box-shadow: none !important;
+        transition: border-color 0.2s, background-color 0.2s !important;
+        font-family: inherit !important;
+    }
+
+    .ielts-inline-input:focus, .blank-input:focus {
+        border-bottom-color: #0d6efd !important;
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+
+    /* Unified, Modern Question Number Badge */
+    .qnum-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        margin-right: 12px;
+        margin-top: 2px;
+    }
+
+    select.blank-input {
+        padding-left: 0.25rem !important;
+        padding-right: 1.5rem !important; /* Proper arrow space */
+        cursor: default !important;
+        border-bottom: 2px solid #adb5bd !important;
+        border-radius: 0 !important;
+    }
+
+
+    /* Custom Parts Tabs */
+    .part-tab-container {
+        display: flex;
+        gap: 6px;
+        background: #f1f3f5;
+        padding: 3px;
+        border-radius: 8px;
+    }
+    .part-tab {
+        border: 1px solid #dee2e6;
+        background: #f8f9fa;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #495057 !important;
+        cursor: pointer;
+    }
+    .part-tab.active {
+        background: white !important;
+        color: #0d6efd !important;
+        border-color: #0d6efd;
+        box-shadow: 0 2px 4px rgba(13, 110, 253, 0.1);
+    }
+
+    /* OVERLAY STYLES */
+    #custom-result-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 20000;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .confirm-card {
+        background: white;
+        border-radius: 24px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        transform: translateY(20px);
+        animation: slideUpFade 0.4s ease-out forwards;
+    }
+    
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUpFade { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* RESPONSIVE */
+    @media (max-width: 992px) {
+        .exam-header-inner {
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding: 8px !important;
+            gap: 15px;
+            scrollbar-width: none;
+        }
+        .exam-header-inner::-webkit-scrollbar { display: none; }
+
+        .part-tab-container {
+            flex-direction: row !important;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            scrollbar-width: none;
+            padding: 4px;
+        }
+        .part-tab-container::-webkit-scrollbar { display: none; }
+
+        .part-tab {
+            min-width: 50px;
+            padding: 6px 10px;
+            margin: 0;
+        }
+
+        .score-badge {
+            padding: 4px 8px;
+            gap: 5px;
+        }
+        .score-circle {
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
+        }
+        .test-title-badge { display: none; }
+
+        .exam-split-container { 
+            flex-direction: column; 
+            height: auto; 
+            overflow-y: auto; 
+        }
+        .panel-passage, .panel-questions { 
+            max-width: 100% !important; 
+            width: 100% !important; 
+            height: auto !important; 
+            overflow: visible !important; 
+            border-right: none !important; 
+            padding: 1.5rem !important;
+        }
+        .result-wrapper { 
+            position: relative; 
+            height: auto; 
+            overflow-y: auto; 
+        }
+        body { overflow: auto !important; }
+    }
+
+    /* Locator Highlighting */
+    .passage-locator {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 0;
+        margin: 0;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid #ffeeba;
+    }
+    .passage-locator.active-highlight {
+        background-color: #0d6efd !important;
+        color: white !important;
+        border-radius: 2px;
+    }
+
+    /* New Area Highlighter */
+    .passage-locator-area.active-area-highlight {
+        background-color: #ffeb3b !important;
+        color: #000 !important;
+        border-radius: 2px;
+    }
+
+    /* Stunning Answer Key Style */
+    .answer-key-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 15px;
+    }
+    
+    .answer-card-modern {
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: stretch;
+        position: relative;
+        border: 1px solid #eef2f6;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.015);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .answer-card-modern:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+    
+    .answer-card-modern.is-correct {
+        border-color: #d1fae5;
+        background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 100%);
+    }
+    
+    .answer-card-modern.is-wrong {
+        border-color: #fee2e2;
+        background: linear-gradient(145deg, #fef2f2 0%, #ffffff 100%);
+    }
+
+    .ans-mod-num {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        margin-right: 12px;
+    }
+    
+    .is-correct .ans-mod-num { background: #d1fae5; color: #059669; }
+    .is-wrong .ans-mod-num { background: #fee2e2; color: #dc2626; }
+
+    .ans-mod-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex-grow: 1;
+        min-width: 0;
+    }
+
+    .ans-mod-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 800;
+        margin-bottom: 2px;
+    }
+
+    .ans-mod-text {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.3;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .is-correct .ans-mod-text { color: #047857; }
+    .is-wrong .ans-mod-text { color: #b91c1c; }
+
+    .ans-mod-actions {
+        display: flex;
+        align-items: center;
+        margin-left: 10px;
+        border-left: 1px solid #e2e8f0;
+        padding-left: 10px;
+    }
+
+    .btn-locator-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        color: #3b82f6;
+        border: none;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-locator-icon:hover {
+        background: #3b82f6;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .ans-mod-status {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        border: 2px solid white;
+    }
+    
+    .is-correct .ans-mod-status { background: #10b981; }
+    .is-wrong .ans-mod-status { background: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-wrapper">
+    <!-- HEADER -->
+    <div class="exam-header-wrapper shadow-sm sticky-top">
+        <div class="exam-header-inner flex-wrap">
+            
+            <!-- Title Badge -->
+            <div class="test-title-badge">
+                <div class="test-title-icon">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                <span class="test-title-main">{{ test.title }} (Result)</span>
+            </div>
+
+            <!-- Part Tabs Navigation -->
+            <div class="part-tab-container nav m-0" id="resultNav" role="tablist">
+                {% for p in passages %}
+                <button class="part-tab nav-link {% if forloop.first %}active{% endif %}"
+                    id="part-{{ p.passage.id }}-tab" data-bs-toggle="pill" data-bs-target="#part{{ p.passage.id }}"
+                    type="button" role="tab" aria-controls="part{{ p.passage.id }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                    P{{ forloop.counter }}
+                </button>
+                {% endfor %}
+            </div>
+
+            <!-- Score Badge -->
+            <div class="score-badge">
+                <div class="d-flex flex-column text-end pe-2 border-end">
+                    <span class="small fw-bold text-muted" style="font-size: 10px; text-transform: uppercase;">Score</span>
+                    <span class="fw-bold text-dark">{{ result.score }}/{{ result.total }}</span>
+                </div>
+                <div class="score-circle">
+                    <i class="bi bi-trophy-fill" style="font-size: 1rem;"></i>
+                </div>
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{% url 'ielts:share_result' result.id %}" target="_blank" class="btn btn-primary btn-sm ms-2 fw-bold" style="background-color: #1877F2; border-color: #1877F2;">
+                    <i class="bi bi-facebook"></i> Share
+                </a>
+                <a href="{% url 'ielts:reading_home' %}" class="btn btn-outline-primary btn-sm ms-2 fw-bold">Exit</a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT SPLIT -->
+    <div class="tab-content flex-grow-1" id="resultNavContent">
+        {% for p in passages %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %} h-100" id="part{{ p.passage.id }}" role="tabpanel">
+            <div class="exam-split-container">
+                
+                <!-- PASSAGE PANEL -->
+                <div class="panel-passage">
+                    <h4 class="mb-4">Passage {{ forloop.counter }}</h4>
+                    {{ p.content|safe }}
+                </div>
+
+                <!-- DRAGGABLE RESIZER -->
+                <div class="resizer"></div>
+
+                <!-- QUESTIONS REVIEW PANEL -->
+                <div class="panel-questions">
+                    
+
+                    {% for sec in sections %}
+                    {% if sec.section.passage.id == p.passage.id %}
+                    <div class="section-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="m-0 text-primary fw-bold">{{ sec.section.title }}</h5>
+                        </div>
+                        <p class="text-muted mb-4" style="font-size: 0.85rem;">{{ sec.section.instruction_text|safe }}</p>
+
+                        {% for item in sec.questions %}
+                        <div class="question-review-card">
+                            
+
+                            <div class="mb-3">
+                                {% if sec.section.question_type in 'sent_comp,summary_completion,note_completion,table_completion,flow_chart_completion,diagram_label_completion,short_answer,matching_headings,matching_features,matching_info,matching_sentence_endings,pick_from_list,completion,matching' %}
+                                    {% if item.blank_keys %}
+                                        <div class="sentence-completion-result">
+                                            {{ item.html|safe }}
+                                        </div>
+                                    {% else %}
+                                        {% if sec.section.question_type in 'matching_headings,matching_features,matching_info,matching_sentence_endings,pick_from_list,matching' %}
+                                            <div class="d-flex align-items-center mb-3 p-1">
+                                                <div class="qnum-badge">
+                                                    {{ item.question.number }}
+                                                </div>
+                                                <div class="me-3">
+                                                    {% if item.question.choices.all or sec.section.get_matching_options_list %}
+                                                        <div class="text-center d-flex align-items-center justify-content-center" 
+                                                             style="width: 85px; height: 34px; border: 2px solid {% if item.is_correct %}#38a169{% else %}#e53e3e{% endif %}; background: #f8f9fa; color: {% if item.is_correct %}#276749{% else %}#c53030{% endif %}; font-weight: 700; font-size: 1rem; border-radius: 4px;">
+                                                            {{ item.user_answer|default:'-' }}
+                                                        </div>
+                                                    {% else %}
+                                                        <input type="text" class="ielts-inline-input blank-input" value="{{ item.user_answer|default:'' }}" readonly 
+                                                               style="border-bottom-color: {% if item.is_correct %}#38a169{% else %}#e53e3e{% endif %} !important; color: {% if item.is_correct %}#276749{% else %}#c53030{% endif %} !important; width: 60px;">
+                                                    {% endif %}
+                                                </div>
+                                                <div class="question-text-content mb-0" style="font-size: 0.95rem; color: #222;">
+                                                    {{ item.question.text|safe }}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="d-flex align-items-start mb-3">
+                                                <div class="qnum-badge">
+                                                    {{ item.question.number }}
+                                                </div>
+                                                <div class="question-text-content" style="font-size: 0.95rem; color: #222; padding-top: 3px;">
+                                                    {{ item.question.text|safe }}
+                                                </div>
+                                            </div>
+                                            <div class="mt-2 mb-3" style="width: {% if sec.section.question_type == 'short_answer' %}200px{% else %}250px{% endif %}; padding-left: 36px;">
+                                                <label class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Your Answer</label>
+                                                <input type="text" class="ielts-inline-input blank-input" value="{{ item.user_answer|default:'' }}" readonly 
+                                                       style="border-bottom-color: {% if item.is_correct %}#38a169{% else %}#e53e3e{% endif %} !important; color: {% if item.is_correct %}#276749{% else %}#c53030{% endif %} !important; width: 100px;">
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="qnum-badge">
+                                            {% if sec.section.question_type == 'choose_two' %}
+                                                {{ sec.section.start_number }}-{{ sec.section.end_number }}
+                                            {% else %}
+                                                {{ item.question.number }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="question-text-content" style="font-size: 0.95rem;">
+                                            {{ item.question.text|safe }}
+                                        </div>
+                                    </div>
+
+                                    {% if sec.section.question_type == 'mcq' or sec.section.question_type == 'tfng' or sec.section.question_type == 'ynng' or sec.section.question_type == 'choose_two' %}
+                                    <div class="mt-2 text-start" style="padding-left: 32px;">
+                                        {% for choice in item.question.choices.all %}
+                                        <div class="choice-item d-block result-choice 
+                                            {% if choice.id in item.user_choice_ids %}selected{% endif %} 
+                                            {% if choice.id in item.correct_choice_ids %}correct-choice{% endif %}">
+                                            {% if sec.section.question_type == 'mcq' or sec.section.question_type == 'choose_two' %}
+                                                <span class="choice-label me-1 fw-bold">{{ choice.label|safe }}</span>
+                                                {{ choice.text|safe }}
+                                            {% else %}
+                                                {{ choice.text|safe }}
+                                            {% endif %}
+                                            
+                                            {% if choice.id in item.user_choice_ids and choice.id in item.correct_choice_ids %}
+                                                <i class="bi bi-check-circle-fill float-end text-success"></i>
+                                            {% elif choice.id in item.user_choice_ids %}
+                                                <i class="bi bi-x-circle-fill float-end text-danger"></i>
+                                            {% elif choice.id in item.correct_choice_ids %}
+                                                <i class="bi bi-check-circle-fill float-end text-success opacity-50"></i>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="mt-2" style="max-width: 200px; padding-left: 32px;">
+                                        <label class="text-muted" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Your Answer</label>
+                                        <input type="text" class="ielts-inline-input blank-input" value="{{ item.user_answer|default:'' }}" readonly 
+                                               style="border-bottom-color: {% if item.is_correct %}#38a169{% else %}#e53e3e{% endif %} !important; color: {% if item.is_correct %}#276749{% else %}#c53030{% endif %} !important; width: 100px;">
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+
+
+                        </div>
+                        {% endfor %}
+
+                        <!-- Section Answers Summary -->
+                        <div class="mt-4 mt-md-5 p-4 rounded-4" style="background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%); border: 1px dashed #0d6efd33;">
+                            <h6 class="text-primary mb-4 fw-bolder d-flex align-items-center">
+                                <i class="bi bi-key-fill me-2 fs-5"></i>Answers for this Section
+                            </h6>
+                            <div class="answer-key-container">
+                                {% for ans in sec.answers_summary %}
+                                <div class="answer-card-modern {% if ans.is_correct %}is-correct{% else %}is-wrong{% endif %}">
+                                    <div class="ans-mod-status">
+                                        {% if ans.is_correct %}
+                                            <i class="bi bi-check" style="font-size: 1.1rem; line-height: 1; margin-top: 1px;"></i>
+                                        {% else %}
+                                            <i class="bi bi-x" style="font-size: 1.1rem; line-height: 1; margin-top: 1px;"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ans-mod-num">
+                                        {{ ans.number }}
+                                    </div>
+                                    <div class="ans-mod-body">
+                                        <div class="ans-mod-label">answer</div>
+                                        <div class="ans-mod-text">{{ ans.answer }}</div>
+                                    </div>
+                                    <div class="ans-mod-actions">
+                                        <button type="button" class="btn-locator-icon" onclick="showLocator('{{ ans.number }}')" title="Locate in passage">
+                                            <i class="bi bi-geo-alt-fill" style="margin-top: -1px;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Custom Stylish Initial Review Overlay -->
+<div id="custom-result-overlay">
+    <div class="confirm-card overflow-hidden" style="max-width: 550px; position: relative;">
+        <!-- Beautiful Background Gradient/Shape -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 120px; background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); z-index: 0;"></div>
+        <div style="position: absolute; top: 20px; right: 20px; opacity: 0.15; z-index: 0;">
+            <i class="bi bi-award-fill" style="font-size: 8rem; color: white;"></i>
+        </div>
+        
+        <div class="card-body p-4 bg-transparent position-relative text-start" style="z-index: 1;">
+            
+            <h4 class="fw-bold mb-4 text-white text-center mt-2" style="text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                <i class="bi bi-bar-chart-fill me-2"></i>Performance Summary
+            </h4>
+            
+            <div class="row g-3 mt-4">
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-white rounded-4 text-center border shadow-sm h-100" style="transition: transform 0.2s;">
+                        <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.70rem; letter-spacing: 0.5px;">Band Score</div>
+                        <div class="fs-2 fw-bolder text-primary lh-1 mb-1">{{ band_score|floatformat:1 }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-white rounded-4 text-center border shadow-sm h-100 table-hover-effect">
+                        <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.70rem; letter-spacing: 0.5px;">Correct</div>
+                        <div class="fs-2 fw-bolder text-success lh-1 mb-1">{{ right_count|floatformat:0 }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-white rounded-4 text-center border shadow-sm h-100">
+                        <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.70rem; letter-spacing: 0.5px;">Incorrect</div>
+                        <div class="fs-2 fw-bolder text-danger lh-1 mb-1">{{ wrong_count|floatformat:0 }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 bg-white rounded-4 text-center border shadow-sm h-100">
+                        <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 0.70rem; letter-spacing: 0.5px;">Total Items</div>
+                        <div class="fs-2 fw-bolder text-dark lh-1 mb-1">{{ result.total|floatformat:0 }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-muted text-center bg-light p-2 rounded-3" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle me-1"></i> * Band score is strictly calculated using the standard IELTS Academic criteria.
+            </div>
+
+            <div class="mt-4 pt-3 text-center border-top border-light d-flex flex-column align-items-center gap-3">
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{% url 'ielts:share_result' result.id %}" target="_blank" class="btn btn-primary btn-lg px-5 py-2 fw-bold shadow" style="border-radius: 50px; background: #1877F2; border: none;">
+                    <i class="bi bi-facebook me-2"></i> Share on Facebook
+                </a>
+                <button type="button" class="btn bg-white text-dark btn-lg px-5 py-2 fw-bold shadow-sm" style="border-radius: 50px; border: none;" onclick="closeResultOverlay()">
+                    Review Answers <i class="bi bi-arrow-right-circle ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function closeResultOverlay() {
+        document.getElementById('custom-result-overlay').style.display = 'none';
+    }
+
+    // RESIZABLE PANELS LOGIC
+    document.addEventListener('DOMContentLoaded', function() {
+        const containers = document.querySelectorAll('.exam-split-container');
+        
+        containers.forEach(container => {
+            const resizer = container.querySelector('.resizer');
+            const leftPanel = container.querySelector('.panel-passage');
+            
+            if (!resizer || !leftPanel) return;
+
+            let x = 0;
+            let leftWidth = 0;
+
+            const mouseDownHandler = function(e) {
+                x = e.clientX;
+                leftWidth = leftPanel.getBoundingClientRect().width;
+
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+                
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            };
+
+            const mouseMoveHandler = function(e) {
+                const dx = e.clientX - x;
+                const newLeftWidth = ((leftWidth + dx) * 100 / container.getBoundingClientRect().width);
+                
+                if (newLeftWidth > 20 && newLeftWidth < 80) {
+                    leftPanel.style.width = `${newLeftWidth}%`;
+                }
+            };
+
+            const mouseUpHandler = function() {
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+                
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            };
+
+            resizer.addEventListener('mousedown', mouseDownHandler);
+        });
+    });
+
+    // Locator Highlighting Logic
+    function showLocator(qNum) {
+        // 1. Clear previous highlights
+        document.querySelectorAll('.active-highlight, .active-area-highlight').forEach(el => {
+            el.classList.remove('active-highlight', 'active-area-highlight');
+        });
+
+        const locatorId = `l${qNum}`;
+        const legacyLocatorText = `[Q${qNum}]`;
+        
+        const passagePanels = document.querySelectorAll('.panel-passage');
+        let firstElement = null;
+
+        passagePanels.forEach(panel => {
+            // Check for new syntax: {[ text ][=l1,2,3]}
+            // Using ~= selector to find the ID in a space-separated list
+            let areaEls = panel.querySelectorAll(`.passage-locator-area[data-locator~="${locatorId}"]`);
+            areaEls.forEach(el => {
+                el.classList.add('active-area-highlight');
+                if (!firstElement) firstElement = el;
+            });
+
+            // Fallback/Legacy [Q1] syntax
+            let legacyEls = Array.from(panel.querySelectorAll('.passage-locator')).filter(el => el.textContent.includes(legacyLocatorText));
+            legacyEls.forEach(el => {
+                el.classList.add('active-highlight');
+                if (!firstElement) firstElement = el;
+            });
+        });
+
+        if (firstElement) {
+            firstElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            console.log("Locator not found for Q" + qNum);
+        }
+    }
+
+    // Pre-process passage content to handle {[ text ][=l1]}
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.panel-passage').forEach(panel => {
+            // Use innerHTML replacement for simplicity with complex tags, 
+            // but carefully to not break existing DOM events if any (usually none in result passage)
+            let content = panel.innerHTML;
+            
+            // Regex to find {[ text ][=l1,2,3]}
+            // Group 1: inner text, Group 2: numbers list (e.g. 1,2,3)
+            const regex = /\{\[\s*(.*?)\s*\]\[=l([\d,]+)\]\}/g;
+            
+            content = content.replace(regex, function(match, text, numsStr) {
+                // Convert "1,2,3" to "l1 l2 l3" for space-separated attribute
+                const locators = numsStr.split(',').map(n => `l${n.trim()}`).join(' ');
+                return `<span class="passage-locator-area" data-locator="${locators}">${text}</span>`;
+            });
+
+            panel.innerHTML = content;
+
+            // Also search for legacy [Q1] tags in text nodes and wrap them
+            const walk = document.createTreeWalker(panel, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            const nodesToWrap = [];
+            while (node = walk.nextNode()) {
+                if (/\[Q\d+\]/.test(node.textContent)) {
+                    nodesToWrap.push(node);
+                }
+            }
+            nodesToWrap.forEach(textNode => {
+                const parent = textNode.parentNode;
+                const parts = textNode.textContent.split(/(\[Q\d+\])/);
+                const frag = document.createDocumentFragment();
+                parts.forEach(part => {
+                    if (/\[Q\d+\]/.test(part)) {
+                        const span = document.createElement('span');
+                        span.className = 'passage-locator';
+                        span.textContent = part;
+                        frag.appendChild(span);
+                    } else if (part) {
+                        frag.appendChild(document.createTextNode(part));
+                    }
+                });
+                parent.replaceChild(frag, textNode);
+            });
+        });
+    });
+</script>
+{% endblock %}

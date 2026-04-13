@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | My Progress - Education Village{% endblock %}
+
+{% block content %}
+<div class="row mb-5 animate__animated animate__fadeIn">
+    <div class="col-lg-12 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+        <div>
+            <h1 class="display-5 fw-black text-dark mb-1">My Dashboard</h1>
+            <p class="text-muted fw-medium">See your scores for AI tests and IELTS practice here.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{% url 'generate_test' %}" class="btn btn-premium shadow-sm">
+                <i class="bi bi-cpu-fill me-2"></i>Start New AI Test
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Subscription & Balance Card -->
+    <div class="col-12 col-md-4">
+        <div class="premium-card text-white h-100 position-relative overflow-hidden border-0 shadow-lg" 
+             style="background: {% if profile.is_paid %}linear-gradient(135deg, #b45309 0%, #f59e0b 100%){% else %}linear-gradient(135deg, #0f172a 0%, #1e293b 100%){% endif %} !important;">
+            
+            <!-- Abstract background shape -->
+            <div class="position-absolute top-0 end-0 p-5 {% if profile.is_paid %}opacity-25{% else %}opacity-10{% endif %}" style="transform: rotate(15deg) translate(20%, -20%);">
+                {% if profile.is_paid %}
+                <i class="bi bi-award-fill display-1 text-white"></i>
+                {% else %}
+                <i class="bi bi-gem display-1 text-white"></i>
+                {% endif %}
+            </div>
+            
+            <div class="position-relative z-1 d-flex flex-column h-100">
+                <div class="mb-4">
+                    <span class="badge {% if profile.is_paid %}bg-white text-warning{% else %}bg-primary bg-opacity-25 text-primary border-primary{% endif %} border border-opacity-25 rounded-pill mb-3 px-3 py-2 fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">
+                        {% if current_plan %}{{ current_plan.name|upper }}{% else %}FREE CORE{% endif %}
+                    </span>
+                    <h3 class="fw-black mb-1">Account Balance</h3>
+                    <p class="small {% if profile.is_paid %}text-white opacity-75{% else %}opacity-50{% endif %} mb-0">Track your premium resources</p>
+                </div>
+
+                <!-- Balances List -->
+                <div class="flex-grow-1">
+                    <!-- AI Credits -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold"><i class="bi bi-cpu me-2 {% if profile.is_paid %}text-white{% else %}text-primary{% endif %}"></i>AI জেনারেশন ক্রেডিট</span>
+                            <span class="small fw-bold">
+                                {% if limit_monthly == -1 %}
+                                    Unlimited (আনলিমিটেড)
+                                {% else %}
+                                    {{ profile.monthly_question_count }} / {{ limit_monthly }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if limit_monthly != -1 %}
+                        <div class="progress bg-white bg-opacity-25 rounded-pill" style="height: 6px;">
+                            <div class="progress-bar {% if profile.is_paid %}bg-white{% else %}bg-primary{% endif %}" 
+                                 style="width: {% if limit_monthly > 0 %}{% widthratio profile.monthly_question_count limit_monthly 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- IELTS Mock -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold"><i class="bi bi-mortarboard me-2 {% if profile.is_paid %}text-white{% else %}text-info{% endif %}"></i>মক টেস্ট (Mock Test)</span>
+                            <span class="small fw-bold">
+                                {% if ielts_limit == -1 %}
+                                    Unlimited (আনলিমিটেড)
+                                {% else %}
+                                    {{ profile.ielts_mock_count }} / {{ ielts_limit }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if ielts_limit != -1 %}
+                        <div class="progress bg-white bg-opacity-25 rounded-pill" style="height: 6px;">
+                            <div class="progress-bar {% if profile.is_paid %}bg-white{% else %}bg-info{% endif %}" 
+                                 style="width: {% if ielts_limit > 0 %}{% widthratio profile.ielts_mock_count ielts_limit 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Extra Exams (ExamPack) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold"><i class="bi bi-lightning-charge me-2 {% if profile.is_paid %}text-white{% else %}text-warning{% endif %}"></i>এক্সট্রা ব্যালেন্স (Extra)</span>
+                            <span class="small fw-black {% if profile.is_paid %}text-white{% else %}text-warning{% endif %}">{{ profile.extra_tests_balance }} Left</span>
+                        </div>
+                        <div class="progress bg-white bg-opacity-25 rounded-pill" style="height: 6px;">
+                            <div class="progress-bar {% if profile.is_paid %}bg-white{% else %}bg-warning{% endif %}" style="width: {% if profile.extra_tests_balance > 0 %}100{% else %}0{% endif %}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    {% if current_plan and current_plan.feature_list %}
+                        <p class="small fw-bold mb-2 {% if profile.is_paid %}text-white opacity-75{% else %}opacity-75{% endif %}">Your Benefits:</p>
+                        <ul class="list-unstyled mb-0">
+                            {% for feature in current_plan.feature_list %}
+                                <li class="small mb-1 d-flex align-items-center fw-medium">
+                                    <i class="bi bi-check2-circle {% if profile.is_paid %}text-white{% else %}text-success{% endif %} me-2"></i> {{ feature }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4 pt-3 border-top border-white border-opacity-25">
+                    {% if not profile.is_paid %}
+                        <a href="{% url 'upgrade' %}" class="btn btn-primary w-100 py-2 rounded-3 fw-bold shadow-sm" style="font-size: 0.85rem;">
+                            <i class="bi bi-arrow-up-circle me-2"></i>UPGRADE NOW
+                        </a>
+                    {% else %}
+                        <div class="text-center p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-25">
+                            <h6 class="mb-0 fw-bold text-white"><i class="bi bi-patch-check-fill me-2"></i>PLAN ACTIVE</h6>
+                            {% if profile.subscription_expiry %}
+                                <div class="mt-2 pt-2 border-top border-white border-opacity-25">
+                                    <span class="small fw-bold text-white d-block opacity-100" style="font-size: 0.8rem;"><i class="bi bi-calendar-x me-1"></i> Expires: {{ profile.subscription_expiry|date:"d M, Y" }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Usage Metrics -->
+    <div class="col-12 col-md-4">
+        <div class="premium-card h-100 bg-white d-flex flex-column">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-graph-up-arrow text-success fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-0">AI Performance</h5>
+            </div>
+            
+            <div class="flex-grow-1">
+                <div class="mb-4">
+                    <h2 class="fw-black mb-1">
+                        {% if current_plan.ai_credits_limit == -1 %}∞{% else %}{{ profile.monthly_question_count }}{% endif %}
+                        <span class="fs-5 text-muted fw-bold">/ {% if current_plan.ai_credits_limit == -1 %}∞{% else %}{{ current_plan.ai_credits_limit }}{% endif %} Qs</span>
+                    </h2>
+                    <p class="small text-muted mb-0">Total Generated Questions</p>
+                    {% if limit_monthly != -1 %}
+                    <div class="progress bg-light mt-3" style="height: 8px; border-radius: 10px;">
+                        <div class="progress-bar bg-success" style="width: {% if limit_monthly > 0 %}{% widthratio profile.monthly_question_count limit_monthly 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="p-3 rounded-4 bg-light border-0">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-muted">Success Rate</span>
+                        <span class="small fw-bold text-success">98.2%</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">Active Plan</span>
+                        <span class="badge bg-white text-dark border shadow-sm small">{% if current_plan %}{{ current_plan.name }}{% else %}Free{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Transitions -->
+    <div class="col-12 col-md-4">
+        <div class="premium-card h-100 bg-white border-primary border-opacity-10">
+            <h5 class="fw-bold mb-4">Quick Links</h5>
+            <div class="d-grid gap-3">
+                <a href="{% url 'ielts:reading_home' %}" class="btn btn-light border p-3 rounded-4 text-start d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                        <i class="bi bi-journal-text text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-0">IELTS Reading</h6>
+                        <span class="text-muted small">Full Practice</span>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted"></i>
+                </a>
+                <a href="{% url 'ielts:dashboard' %}" class="btn btn-light border p-3 rounded-4 text-start d-flex align-items-center">
+                    <div class="bg-warning bg-opacity-10 p-2 rounded-3 me-3">
+                        <i class="bi bi-trophy text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-0">My IELTS Score</h6>
+                        <span class="text-muted small">Detailed Score</span>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Tabs -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-8">
+        <section class="premium-card bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-black mb-0"><i class="bi bi-terminal-split me-2 text-primary"></i>AI Test History</h5>
+                <form method="get" class="d-flex">
+                    <input type="date" name="date" class="form-control form-control-sm border-0 bg-light rounded-pill px-3" value="{{ filter_date|default:'' }}" onchange="this.form.submit()">
+                </form>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted uppercase text-xs">
+                        <tr>
+                            <th class="ps-4 py-3 fw-bold border-0">Subject / Type</th>
+                            <th class="py-3 fw-bold border-0 text-center">Score</th>
+                            <th class="pe-4 py-3 fw-bold border-0 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        {% for exam in exams %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="d-block fw-black text-dark">{{ exam.subject }}</span>
+                                <span class="text-muted" style="font-size: 0.7rem;">{{ exam.created_at|date:"M d, Y" }} • {{ exam.total_questions }} Items</span>
+                            </td>
+                            <td class="text-center">
+                                {% if exam.score is not None %}
+                                    <div class="badge bg-primary bg-opacity-10 text-primary py-2 px-3 rounded-pill fw-black">
+                                        {{ exam.score }} / {{ exam.total_questions }}
+                                    </div>
+                                {% else %}
+                                     <span class="badge bg-light text-muted fw-bold">In Progress</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4 text-end">
+                                {% if exam.score is not None %}
+                                    <a href="{% url 'exam_result' exam.id %}" class="btn btn-sm btn-outline-premium px-3 py-2 rounded-3">See Result</a>
+                                {% else %}
+                                    <a href="{% url 'take_exam' exam.id %}" class="btn btn-sm btn-premium px-3 py-2 rounded-3">Resume</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">No test history found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            {% if exams.has_other_pages %}
+            <div class="mt-4 d-flex justify-content-center">
+                <nav aria-label="AI Test History Pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if exams.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link rounded-start-pill px-3" href="?page_ai={{ exams.previous_page_number }}{% if filter_date %}&date={{ filter_date }}{% endif %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in exams.paginator.page_range %}
+                            {% if exams.number == num %}
+                                <li class="page-item active"><span class="page-link px-3">{{ num }}</span></li>
+                            {% elif num > exams.number|add:'-3' and num < exams.number|add:'3' %}
+                                <li class="page-item"><a class="page-link px-3" href="?page_ai={{ num }}{% if filter_date %}&date={{ filter_date }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if exams.has_next %}
+                            <li class="page-item">
+                                <a class="page-link rounded-end-pill px-3" href="?page_ai={{ exams.next_page_number }}{% if filter_date %}&date={{ filter_date }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <section class="premium-card bg-white h-100">
+            <h5 class="fw-black mb-4"><i class="bi bi-mortarboard me-2 text-warning"></i>IELTS Progress</h5>
+            <div class="d-grid gap-4">
+                {% for res in ielts_results %}
+                <div class="p-3 bg-light rounded-4 border-start border-4 border-warning">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold text-dark mb-0 d-inline-block text-truncate" style="max-width: 150px;">{{ res.test.title }}</h6>
+                        <span class="badge bg-white text-dark shadow-sm">Band {{ res.band_score|floatformat:1 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">{{ res.submitted_at|date:"M d" }}</span>
+                        <a href="{% url 'ielts:result' res.test.slug res.id %}" class="btn btn-link btn-sm p-0 text-warning fw-bold text-decoration-none">View Score <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <p class="text-muted small">No IELTS tests archived.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Gateway | Financial Interface - Education Village{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75 animate__animated animate__fadeIn">
+    <div class="col-lg-5 col-md-8">
+        <div class="premium-card bg-white p-4 p-md-5 shadow-2xl border-0">
+            <div class="text-center mb-5">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                    <i class="bi bi-shield-check fs-1 text-primary"></i>
+                </div>
+                <h2 class="fw-black text-dark mb-1">Secure Checkout</h2>
+                <p class="text-muted small">Authorize your premium access session.</p>
+            </div>
+            
+            <div class="bg-light p-4 rounded-4 mb-5 border-start border-4 border-primary">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-muted text-uppercase tracking-widest">Selected Plan</span>
+                    <span class="badge bg-primary rounded-pill">{{ plan_type }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-end">
+                    <span class="small text-muted">Total Payable</span>
+                    <h3 class="fw-black text-dark mb-0">{{ amount }} BDT</h3>
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <h6 class="fw-black text-dark mb-3"><i class="bi bi-wallet2 me-2 text-primary"></i>Mobile Banking Protocol</h6>
+                <div class="p-3 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small fw-bold text-muted">Bkash / Nagad (Personal)</div>
+                        <div class="fs-4 fw-black font-monospace text-dark">{{ payment_number }}</div>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm rounded-3 px-3 py-2" onclick="copyToClipboard('{{ payment_number }}')">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'payment_success' %}?plan={{ plan_type }}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted text-uppercase tracking-widest mb-2">Transaction ID (TrxID)</label>
+                    <input type="text" name="trx_id" class="form-control form-control-lg bg-light border-2 rounded-4 p-3 shadow-none fw-bold" placeholder="e.g. 8K7S9..." maxlength="15" required>
+                </div>
+                <div class="mb-5">
+                    <label class="small fw-bold text-muted text-uppercase tracking-widest mb-2">Authenticated Phone</label>
+                    <input type="tel" name="phone_number" class="form-control form-control-lg bg-light border-2 rounded-4 p-3 shadow-none fw-bold" placeholder="017xxxxxxxx" maxlength="15" required>
+                </div>
+
+                <div class="d-grid gap-3">
+                    <button type="submit" class="btn btn-premium btn-lg py-3 rounded-4 shadow">
+                        <i class="bi bi-send-check-fill me-2"></i>Verify & Enable Access
+                    </button>
+                    <a href="{% url 'upgrade' %}" class="btn btn-outline-premium btn-lg py-3 rounded-4">
+                        <i class="bi bi-arrow-left me-2"></i>Change Plan
+                    </a>
+                </div>
+            </form>
+
+            <div class="text-center mt-5">
+                <p class="small text-muted mb-2">Facing authentication latency?</p>
+                <a href="tel:{{ payment_number }}" class="fw-black text-dark text-decoration-none">
+                    <i class="bi bi-headset me-1 text-primary"></i> Operational Support
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Create custom toast/alert
+        const btn = event.currentTarget;
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+        btn.classList.replace('btn-outline-primary', 'btn-success');
+        setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.replace('btn-success', 'btn-outline-primary');
+        }, 2000);
+    }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+    });
+}
+</script>
+
+<style>
+    .min-vh-75 { min-height: 75vh; }
+    .form-control:focus { border-color: var(--primary); background: white !important; }
+</style>
+{% endblock %}

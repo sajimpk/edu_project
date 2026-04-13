@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Result Card - {{ exam.user.username }}{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="{{ exam.user.username|default:'A student' }} just scored {{ exam.score|default:0 }} out of {{ exam.total_questions }} in {{ exam.subject }} on Education Village!">
+{% endblock %}
+
+{% block og_image %}
+<meta property="og:image" content="{{ image_url }}" />
+<meta property="og:image:secure_url" content="{{ image_url }}" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Exam Result Card for {{ exam.user.username }}" />
+
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{ exam.user.username|default:'A student' }} just took {{ exam.subject }} test!" />
+<meta name="twitter:description" content="Score: {{ exam.score|default:0 }} / {{ exam.total_questions }} - See my full performance card on Education Village." />
+<meta name="twitter:image" content="{{ image_url }}" />
+{% endblock %}
+
+{% block extra_head %}
+<!-- Open Graph Tags -->
+<meta property="og:site_name" content="Education Village" />
+<meta property="og:title" content="{{ exam.user.username|default:'A student' }} just took {{ exam.subject }} test!" />
+<meta property="og:description" content="Score: {{ exam.score|default:0 }} / {{ exam.total_questions }} - Download yours today!" />
+<meta property="og:url" content="{{ share_url }}" />
+<meta property="og:type" content="article" />
+
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary-gold: #fbbf24;
+        --secondary-gold: #f59e0b;
+        --tech-blue: #38bdf8;
+        --bg-dark: #020617;
+        --card-bg: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(2, 6, 23, 1) 100%);
+        --accent-glow: radial-gradient(circle at top right, rgba(14, 165, 233, 0.2), transparent 400px);
+        --border-gold: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+    }
+
+    body {
+        background-color: var(--bg-dark);
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    /* Adjusted size container: Fluid width up to 1000px */
+    .share-page-container {
+        width: 100%;
+        max-width: 1000px;
+        min-height: auto;
+        background: radial-gradient(circle at 70% 30%, #1e293b 0%, #020617 100%);
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #fbbf24;
+        border-radius: 12px;
+        box-shadow: 0 50px 100px rgba(0, 0, 0, 0.8), 0 0 30px rgba(251, 191, 36, 0.1);
+        display: flex;
+        flex-direction: column;
+        color: white;
+    }
+
+    /* GridBackground Pattern */
+    .share-page-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: 
+            linear-gradient(rgba(14, 165, 233, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(14, 165, 233, 0.04) 1px, transparent 1px);
+        background-size: 50px 50px;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .share-page-container::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--accent-glow);
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    /* Floating Icons */
+    .tech-icon {
+        position: absolute;
+        opacity: 0.06;
+        pointer-events: none;
+        color: #0ea5e9;
+        z-index: 3;
+    }
+    .icon-1 { top: 10%; left: 5%; font-size: 3.5rem; }
+    .icon-2 { top: 15%; right: 5%; font-size: 4rem; }
+    .icon-3 { bottom: 10%; left: 8%; font-size: 3rem; }
+    .icon-4 { bottom: 20%; right: 12%; font-size: 3.5rem; }
+
+    /* Layout Components */
+    .card-content {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        height: 100%;
+        padding: 35px 40px;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        transform: translateY(15px);
+        transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .card-content.loaded {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Header */
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .congrats-title {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .congrats-title h2 {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        font-size: 2.1rem;
+        margin: 0;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .congrats-title .user-name { color: #fbbf24; }
+
+    .subtitle-badge {
+        flex-shrink: 0;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(251, 191, 36, 0.6);
+        padding: 8px 22px;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        color: white;
+        margin-left: 20px;
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+    }
+
+    /* Main Grid - Responsive */
+    .main-grid {
+        display: grid;
+        grid-template-columns: 260px 1fr 280px;
+        gap: 20px;
+        flex-grow: 1;
+        align-items: start;
+        width: 100%;
+    }
+
+    /* Column 1: Profile & Gauge */
+    .col-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-profile-sm {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255,255,255,0.04);
+        padding: 8px 18px;
+        border-radius: 50px;
+        border: 1px solid rgba(255,255,255,0.08);
+        width: 100%;
+        backdrop-filter: blur(5px);
+    }
+
+    .avatar-sm {
+        width: 50px; height: 50px;
+        border: 2px solid #fbbf24;
+        border-radius: 50%;
+        padding: 2px;
+        background: #020617;
+    }
+    .avatar-sm img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .user-label-sm { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1rem; color: #94a3b8; }
+    .user-label-sm strong { color: white; display: block; font-size: 1.1rem; }
+
+    .gauge-wrapper { position: relative; }
+    .score-gauge { width: 200px; height: 200px; transform: rotate(-90deg); }
+    .gauge-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12; }
+    .gauge-progress { 
+        fill: none; 
+        stroke: url(#gaugeGradient); 
+        stroke-width: 12; 
+        stroke-linecap: round; 
+        filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.5)); 
+        transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    
+    .gauge-center {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    .gauge-val { font-size: 3.2rem; font-weight: 900; line-height: 1; font-family: 'Rajdhani', sans-serif; }
+    .gauge-tot { font-size: 1.3rem; color: #64748b; font-weight: 600; }
+    .gauge-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #fbbf24; display: block; margin-top: 5px; font-weight: 700; }
+
+    /* Column 2: Center Stats Banner */
+    .col-center {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .stat-row-item {
+        background: linear-gradient(90deg, rgba(14, 165, 233, 0.12) 0%, transparent 100%);
+        border: 1px solid rgba(14, 165, 233, 0.25);
+        display: flex;
+        justify-content: space-between;
+        padding: 14px 25px;
+        border-radius: 8px;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+    .stat-lbl { color: #cbd5e1; letter-spacing: 0.8px; }
+    .stat-val { color: #fbbf24; font-size: 1.3rem; }
+
+    /* Column 3: Breakdown Boxes */
+    .col-right {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .summary-box-compact {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 18px;
+        backdrop-filter: blur(10px);
+    }
+    .box-tit {
+        color: #fbbf24; font-size: 1rem; text-transform: uppercase; font-weight: 800; margin-bottom: 12px;
+        border-bottom: 2px solid rgba(251, 191, 36, 0.2); padding-bottom: 8px; display: block; letter-spacing: 1.5px;
+    }
+    .lin { display: flex; justify-content: space-between; font-size: 1.05rem; margin-bottom: 8px; }
+    .lin span { color: #cbd5e1; font-weight: 600; }
+    .lin strong { color: white; font-size: 1.1rem; }
+
+    /* Footer Section */
+    .footer-section {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .progress-track { height: 14px; background: rgba(255,255,255,0.03); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); padding: 3px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #92400e 0%, #fbbf24 100%); border-radius: 20px; width: 0%; transition: width 1.5s ease-out; box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+
+    .footer-branding-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .status-area { display: flex; align-items: center; gap: 12px; }
+    .status-caps { font-weight: 800; font-size: 1rem; text-transform: uppercase; color: #cbd5e1; letter-spacing: 1.5px; }
+    .status-tag { background: #ef4444; color: white; padding: 6px 25px; border-radius: 6px; font-weight: 900; letter-spacing: 2px; font-size: 1.1rem; box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+    .status-tag.success { background: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+
+    .brand-group { text-align: right; }
+    .brand-logo-text { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 1.8rem; letter-spacing: 2px; color: #fbbf24; margin: 0; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+    .brand-tagline { font-size: 0.85rem; color: #ffffff; text-transform: uppercase; font-weight: 700; margin-top: -2px; opacity: 0.9; letter-spacing: 1px; }
+
+    /* Page UI buttons */
+    .action-row {
+        {% if request.GET.render %} display: none !important; {% endif %}
+        margin-top: 30px;
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        max-width: 1000px;
+        z-index: 20;
+    }
+    .btn-action {
+        flex: 1; padding: 14px; border-radius: 12px; font-weight: 800; text-transform: uppercase; text-decoration: none;
+        display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        font-size: 1rem;
+    }
+    .btn-fb { background: #1877f2; color: white; box-shadow: 0 10px 25px rgba(24, 119, 242, 0.25); }
+    .btn-back { background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-action:hover { transform: translateY(-5px); filter: brightness(1.15); color: white; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
+
+/* Hide global navbar/footer on this share page */
+    nav.navbar, footer.footer-organic {
+        display: none !important;
+    }
+    main.container {
+        padding: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    @media (max-width: 991px) {
+        .page-wrapper { padding: 20px 15px; }
+        .main-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        .header-section {
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+        }
+        .congrats-title h2 { white-space: normal; font-size: 1.8rem; }
+        .subtitle-badge { margin-left: 0; }
+        .brand-logo-text { font-size: 1.4rem; }
+        .footer-branding-row { flex-direction: column; text-align: center; gap: 20px; }
+        .brand-group { text-align: center; }
+        .col-left, .col-center, .col-right { width: 100%; }
+        .action-row { flex-direction: column; gap: 10px; }
+    }
+
+    @media (max-width: 576px) {
+        .card-content { padding: 25px 20px; }
+        .congrats-title h2 { font-size: 1.5rem; }
+        .gauge-val { font-size: 2.8rem; }
+        .stat-row-item { padding: 12px 15px; font-size: 1rem; }
+        .stat-val { font-size: 1.1rem; }
+    }
+
+    {% if request.GET.render %}
+    .page-wrapper { 
+        transform: scale(1) !important; 
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 1200px;
+        height: 630px;
+        justify-content: center;
+        align-items: center;
+    }
+    .share-page-container {
+        transform: scale(1.1); /* Slightly enlarge card if needed */
+        margin: 0;
+    }
+    {% endif %}
+</style>
+{% endblock %}
+
+{% block content %}
+{% with score=exam.score|default:0 total=exam.total_questions|default:1 %}
+    {% widthratio score total 100 as percentage %}
+    
+    <div class="page-wrapper">
+        <div class="share-page-container">
+            <!-- Background Icons -->
+            <i class="bi bi-laptop tech-icon icon-1"></i>
+            <i class="bi bi-cpu tech-icon icon-2"></i>
+            <i class="bi bi-graph-up-arrow tech-icon icon-3"></i>
+            <i class="bi bi-shield-check tech-icon icon-4"></i>
+
+            <div class="card-content">
+                <!-- Header -->
+                <div class="header-section">
+                    <div class="congrats-title">
+                        <h2>CONGRATULATIONS, <span class="user-name">{{ exam.user.username|upper }}</span>!</h2>
+                    </div>
+                    <div class="subtitle-badge">
+                        QUIZ: {{ exam.subject|upper }} | {{ exam.created_at|date:"F d, Y" }}
+                    </div>
+                </div>
+
+                <!-- Main Layout Grid -->
+                <div class="main-grid">
+                    <!-- Column 1: Info & Gauge -->
+                    <div class="col-left">
+                        <div class="user-profile-sm">
+                            <div class="avatar-sm">
+                                {% if exam.user.profile.profile_picture %}
+                                   <img src="{{ exam.user.profile.profile_picture.url }}" alt="P">
+                                {% else %}
+                                   <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ exam.user.username }}" alt="A">
+                                {% endif %}
+                            </div>
+                            <div class="user-label-sm">USERNAME: <strong>{{ exam.user.username }}</strong></div>
+                        </div>
+
+                        <div class="gauge-wrapper">
+                            <svg class="score-gauge" viewBox="0 0 100 100">
+                                <defs>
+                                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="gauge-bg" cx="50" cy="50" r="40" />
+                                <circle id="gauge-circle" class="gauge-progress" cx="50" cy="50" r="40" style="stroke-dasharray: 0, 251.2;" />
+                            </svg>
+                            <div class="gauge-center">
+                                <div class="gauge-val">{{ score }}<span class="gauge-tot">/{{ total }}</span></div>
+                                <span class="gauge-lbl">SCORE ACCURACY</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Stats Center -->
+                    <div class="col-center">
+                        <div class="stat-row-item">
+                            <span class="stat-lbl">TOTAL ATTEMPTS:</span>
+                            <span class="stat-val">1/1</span>
+                        </div>
+                        <div class="stat-row-item">
+                            <span class="stat-lbl">CORRECT ANSWERS:</span>
+                            <span class="stat-val text-info">{{ score }}</span>
+                        </div>
+                        <div class="stat-row-item">
+                            <span class="stat-lbl">INCORRECT ANSWERS:</span>
+                            <span class="stat-val text-danger" id="incorrect-stat">0</span>
+                        </div>
+                        <div class="stat-row-item">
+                            <span class="stat-lbl">TIME TAKEN:</span>
+                            <span class="stat-val" id="time-taken-val">
+                                {% if exam.completed_at %}{{ exam.duration }}{% else %}N/A{% endif %}
+                            </span>
+                        </div>
+                        <div class="stat-row-item" style="background: rgba(251, 191, 36, 0.12); border-color: #fbbf24; margin-top: 5px;">
+                            <span class="stat-lbl" style="color: #fbbf24;">FINAL SCORE:</span>
+                            <span class="stat-val" style="color: white; font-size: 1.3rem;">{{ percentage }}%</span>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Detailed Breakdown -->
+                    <div class="col-right">
+                        <div class="summary-box-compact">
+                            <span class="box-tit">Performance Status</span><div class="lin">
+                            <span>Grade:</span>
+                            <strong>
+                            {% if percentage|add:0 >= 80 %}
+                              A+
+                            {% elif percentage|add:0 >= 70 %}
+                              A
+                            {% elif percentage|add:0 >= 60 %}
+                              A-
+                            {% elif percentage|add:0 >= 50 %}
+                              B
+                            {% elif percentage|add:0 >= 40 %}
+                              C
+                            {% elif percentage|add:0 >= 33 %}
+                              D
+                            {% else %}
+                              F
+                            {% endif %}
+                            </strong>
+                            </div>
+                            <div class="lin">
+                                <span>Global Rank:</span>
+                                <strong>#{{ 100|add:percentage|add:-79 }}</strong>
+                            </div>
+                        </div>
+                        <div class="summary-box-compact">
+                            <span class="box-tit">Skill Matrix</span>
+                            <div class="lin"><span>Knowledge:</span> <strong>{{ score }}/{{ total }}</strong></div>
+                            <div class="lin"><span>Logic Sync:</span> <strong>Active</strong></div>
+                        </div>
+                        <div class="summary-box-compact" style="border-left: 3px solid #fbbf24;">
+                            <span class="box-tit" style="color: #fbbf24;">AI Summary</span>
+                            <div class="lin" style="font-size: 0.8rem; line-height: 1.3; color: #94a3b8;">
+                                Mastery demonstrated in core subjects. Focus on speed.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="footer-section">
+                    <div class="progress-track"><div id="linear-progress" class="progress-fill"></div></div>
+                    <div class="footer-branding-row">
+                        <div class="status-area">
+                            <span class="status-caps">STATUS:</span>
+                            <div class="status-tag {% if percentage|add:0 >= 33 %}success{% endif %}">
+                                {% if percentage|add:0 >= 33 %}PASSED{% else %}FAILED{% endif %}
+                            </div>
+                        </div>
+                        <div class="brand-group">
+                            <h3 class="brand-logo-text">EDUCATION VILLAGE</h3>
+                            <div class="brand-tagline">SMART LEARNING ECOSYSTEM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="action-row">
+            <a href="{% url 'take_test' %}" class="btn-action btn-back">
+                <i class="bi bi-arrow-repeat"></i> Try New Test
+            </a>
+        </div>
+    </div>
+{% endwith %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cardInner = document.querySelector('.card-content');
+        const delay = {% if request.GET.render %}0{% else %}100{% endif %};
+        
+        setTimeout(() => {
+            cardInner.classList.add('loaded');
+            startAnimations();
+            formatDuration();
+        }, delay);
+
+        function startAnimations() {
+            const percentage = {{ percentage|default:0 }};
+            const circle = document.getElementById('gauge-circle');
+            const circumference = 2 * Math.PI * 40;
+            const offset = circumference - (percentage / 100) * circumference;
+            if (circle) {
+                circle.style.strokeDasharray = `${circumference} ${circumference}`;
+                circle.style.strokeDashoffset = circumference;
+                setTimeout(() => circle.style.strokeDashoffset = offset, 300);
+            }
+            setTimeout(() => {
+                const lp = document.getElementById('linear-progress');
+                if(lp) lp.style.width = percentage + '%';
+            }, 600);
+        }
+
+        function formatDuration() {
+            const timeEl = document.getElementById('time-taken-val');
+            if (!timeEl) return;
+            const raw = timeEl.innerText.trim();
+            if (raw === 'N/A') return;
+            
+            try {
+                // Raw format: H:MM:SS.uuuuuu or MM:SS
+                const parts = raw.split(':');
+                if (parts.length >= 2) {
+                    const h = parseInt(parts[0]);
+                    const m = parseInt(parts[1]);
+                    const s = Math.floor(parseFloat(parts[parts.length-1]));
+                    
+                    let finalStr = "";
+                    if (h > 0) finalStr += h + "h ";
+                    if (m > 0 || h > 0) finalStr += m + "m ";
+                    finalStr += s + "s";
+                    timeEl.innerText = finalStr.trim();
+                }
+            } catch (e) {
+                console.error("Time conversion error:", e);
+            }
+        }
+
+        const total = {{ exam.total_questions|default:0 }};
+        const score = {{ exam.score|default:0 }};
+        const incorrect = Math.max(0, total - score);
+        const incEl = document.getElementById('incorrect-stat');
+        if(incEl) incEl.innerText = incorrect;
+    });
+</script>
+{% endblock %}

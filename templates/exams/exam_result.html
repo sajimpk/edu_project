@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Test Result | Analysis - Education Village{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate__animated animate__fadeIn">
+    <div class="col-lg-10">
+        
+        <!-- Score Hero Section -->
+        <div class="premium-card bg-white mb-5 shadow-2xl p-0 overflow-hidden">
+            <div class="row g-0">
+                <div class="col-lg-4 bg-dark text-white d-flex flex-column align-items-center justify-content-center p-5 text-center">
+                    <div class="mb-4">
+                        <span class="badge bg-primary rounded-pill px-3 py-2 mb-3">TEST FINISHED</span>
+                    </div>
+                    {% widthratio exam.score exam.total_questions 100 as percentage %}
+                    <div class="display-1 fw-black text-primary lh-1 mb-2">{{ percentage }}%</div>
+                    <div class="fs-5 fw-bold opacity-75">Score Percentage</div>
+                    <div class="mt-4 pt-4 border-top border-white border-opacity-10 w-100">
+                        <div class="h4 fw-black mb-0">{{ exam.score }} / {{ exam.total_questions }}</div>
+                        <div class="small opacity-50">Questions Correct</div>
+                    </div>
+                </div>
+                <div class="col-lg-8 p-5">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="fw-black text-dark mb-1">{{ exam.subject }}</h2>
+                            <p class="text-muted fw-medium mb-0">{{ exam.level }} • {{ exam.difficulty }}</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small fw-bold">TEST ID:</span>
+                            <div class="font-monospace small">#EDU-{{ exam.id|stringformat:"05d" }}</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-4">
+                                <i class="bi bi-clock-history text-primary mb-2 d-block"></i>
+                                <div class="small text-muted fw-bold">Duration</div>
+                                <div class="fw-black">{{ exam.duration|default:"Live Session" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-4">
+                                <i class="bi bi-calendar3 text-success mb-2 d-block"></i>
+                                <div class="small text-muted fw-bold">Date</div>
+                                <div class="fw-black">{{ exam.created_at|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-4">
+                                <i class="bi bi-cpu-fill text-warning mb-2 d-block"></i>
+                                <div class="small text-muted fw-bold">AI Status</div>
+                                <div class="fw-black">Ready</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3 mt-5">
+                        <a href="{% url 'generate_test' %}" class="btn btn-premium px-4 py-3 rounded-4">
+                            <i class="bi bi-lightning-charge-fill me-2"></i>New Test
+                        </a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.scheme }}://{{ request.get_host }}{% url 'share_exam' exam.id %}" target="_blank" class="btn btn-primary px-4 py-3 rounded-4 fw-bold shadow-sm" style="background-color: #1877F2; border-color: #1877F2;">
+                            <i class="bi bi-facebook me-2"></i>Share on Facebook
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-premium px-4 py-3 rounded-4">
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Performance Feedback (On-Demand) -->
+        <div class="premium-card bg-primary bg-opacity-10 border-0 mb-5 p-5 position-relative overflow-hidden" id="ai-feedback-container">
+            <div id="ai-feedback-initial" class="text-center py-4">
+                <div class="status-icon-wrapper mb-4 bg-primary bg-opacity-20 d-inline-flex p-3 rounded-4">
+                    <i class="bi bi-robot fs-1 text-primary"></i>
+                </div>
+                <h3 class="fw-black text-dark mb-3">AI Personal Performance Review</h3>
+                <p class="text-muted mb-4 px-md-5">Get a professional, AI-powered analysis of your exam results to identify your strengths and areas for improvement.</p>
+                
+                {% if user.profile.is_paid %}
+                    <button id="get-feedback-btn" class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-black shadow-primary">
+                        <i class="bi bi-lightning-charge-fill me-2"></i> Click to Get Feedback
+                    </button>
+                {% else %}
+                    <div class="alert alert-warning rounded-4 border-0 mb-0 d-inline-block px-4">
+                        <i class="bi bi-shield-lock-fill me-2"></i> Upgrade to <strong>Premium</strong> to unlock AI Analysis & Detailed Feedback.
+                    </div>
+                    <br>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary mt-3 rounded-pill px-4">Upgrade Now</a>
+                {% endif %}
+            </div>
+
+            <!-- Loading State -->
+            <div id="ai-feedback-loading" class="text-center py-5 d-none">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <h5 class="fw-bold text-primary">AI Mentor is analyzing your results...</h5>
+                <p class="text-muted small">This usually takes 5-10 seconds.</p>
+            </div>
+
+            <!-- Result Area -->
+            <div id="ai-feedback-result" class="d-none">
+                 <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white p-2 rounded-3 me-3">
+                        <i class="bi bi-chat-left-dots-fill"></i>
+                    </div>
+                    <h5 class="fw-black text-primary mb-0">AI Performance Insight (Bengali)</h5>
+                </div>
+                <p class="fs-5 text-dark opacity-90 lh-lg font-bengali" id="ai-feedback-text"></p>
+                <div class="mt-4 pt-4 border-top border-primary border-opacity-10">
+                    <span class="badge bg-primary rounded-pill px-3 py-2 small">AI Analysis Complete</span>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const btn = document.getElementById('get-feedback-btn');
+                const initial = document.getElementById('ai-feedback-initial');
+                const loading = document.getElementById('ai-feedback-loading');
+                const result = document.getElementById('ai-feedback-result');
+                const resultText = document.getElementById('ai-feedback-text');
+
+                if (btn) {
+                    let attempts = 0;
+                    const maxAttempts = 3;
+
+                    function fetchFeedback() {
+                        attempts++;
+                        initial.classList.add('d-none');
+                        loading.classList.remove('d-none');
+                        
+                        // Show retry message if applicable
+                        if (attempts > 1) {
+                            loading.querySelector('h5').innerHTML = `<span class="text-warning">Retrying... (Attempt ${attempts})</span><br>Switching to a faster AI engine...`;
+                        }
+
+                        fetch("{% url 'get_ai_feedback' exam.id %}")
+                            .then(response => {
+                                if (response.status === 408) return response.json().then(d => { throw d; }); // Catch TIMEOUT_RETRY
+                                return response.json();
+                            })
+                            .then(data => {
+                                loading.classList.add('d-none');
+                                if (data.analysis) {
+                                    resultText.innerText = data.analysis;
+                                    result.classList.remove('d-none');
+                                    result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                } else {
+                                    throw data;
+                                }
+                            })
+                            .catch(err => {
+                                console.log("AI Error/Timeout:", err);
+                                if (attempts < maxAttempts && (err.error === 'TIMEOUT_RETRY' || !err.analysis)) {
+                                    // Retry logic
+                                    console.log("Retrying AI Generation...");
+                                    setTimeout(fetchFeedback, 1000); 
+                                } else {
+                                    loading.classList.add('d-none');
+                                    initial.classList.remove('d-none');
+                                    alert(err.message || 'The AI server is currently very busy. Please try again in a few minutes.');
+                                }
+                            });
+                    }
+
+                    btn.addEventListener('click', fetchFeedback);
+                }
+            });
+        </script>
+
+        <style>
+            .font-bengali { font-family: 'Hind Siliguri', 'Kalpurush', sans-serif; }
+            #ai-feedback-container {
+                transition: all 0.5s ease;
+                border: 1px solid rgba(13, 110, 253, 0.1) !important;
+            }
+            .shadow-primary { box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3); }
+        </style>
+
+        <!-- Detailed Breakdown -->
+        <h4 class="fw-black mb-4 px-2"><i class="bi bi-terminal-split me-2"></i>Question Review</h4>
+        
+        {% for q in exam.questions.all %}
+        <div class="premium-card bg-white mb-4 p-4 p-md-5 animate__animated animate__fadeInUp" style="animation-delay: {{ forloop.counter0|add:1 }}00ms">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="badge bg-light text-muted fw-bold p-2 px-3 rounded-pill">Question {{ forloop.counter }}</span>
+                {% if q.is_correct %}
+                    <span class="badge bg-success bg-opacity-10 text-success fw-black p-2 px-3 rounded-pill">CORRECT</span>
+                {% else %}
+                    <span class="badge bg-danger bg-opacity-10 text-danger fw-black p-2 px-3 rounded-pill">INCORRECT</span>
+                {% endif %}
+            </div>
+
+            <h4 class="fw-bold mb-4 text-dark lh-base">{{ q.text|safe }}</h4>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="h-100 p-4 rounded-4 {% if q.is_correct %}bg-success bg-opacity-10 border border-success border-opacity-25{% else %}bg-danger bg-opacity-10 border border-danger border-opacity-25{% endif %}">
+                        <div class="small fw-bold opacity-75 text-uppercase mb-2">Your Answer</div>
+                        <div class="fs-5 fw-black {% if q.is_correct %}text-success{% else %}text-danger{% endif %}">
+                            {{ q.user_answer|default:"Empty" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="h-100 p-4 rounded-4 bg-light border border-dark border-opacity-10">
+                        <div class="small fw-bold opacity-75 text-uppercase mb-2">Correct Answer</div>
+                        <div class="fs-5 fw-black text-dark">
+                            {{ q.correct_answer|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if q.explanation %}
+            <div class="bg-light p-4 rounded-4 border-start border-4 border-primary mt-4">
+                <h6 class="fw-black text-primary mb-2">Answer Explanation</h6>
+                <p class="mb-0 text-muted">{{ q.explanation|safe }}</p>
+            </div>
+            {% endif %}
+            
+            {% if q.feedback %}
+            <div class="bg-primary bg-opacity-5 p-4 rounded-4 mt-3">
+                <h6 class="fw-black text-primary mb-1">AI Tip for Improvement</h6>
+                <p class="mb-0 small text-dark opacity-75">{{ q.feedback|safe }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}EduVillage Blog | IELTS Writing Tips & English Fluency Problems{% endblock %}
+{% block meta_description %}
+<meta name="description" content="Read expert tips on how to improve IELTS speaking in Bangladesh, IELTS writing tips for band 7, and solutions for English fluency problems in our EduVillage blog.">
+{% endblock %}
+{% block meta_keywords %}
+<meta name="keywords" content="how to improve ielts speaking in bangladesh, ielts writing tips for band 7 bangladesh, english fluency problem bangladesh, ielts coaching in dhaka online, eduvillage blog">
+{% endblock %}
+
+{% block content %}
+<div class="row animate__animated animate__fadeIn">
+    <!-- Header Section -->
+    <div class="col-12 text-center mb-5">
+        <h1 class="display-4 fw-black text-dark mb-2">EduVillage <span class="text-success">Blog</span></h1>
+        <p class="text-muted lead">আপনার পরীক্ষার প্রস্তুতির জন্য সেরা গাইড এবং টিপস।</p>
+        <div class="d-flex justify-content-center gap-2 mt-4 flex-wrap">
+            <a href="{% url 'blog:post_list' %}" class="btn btn-sm {% if not request.GET.category %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill px-4">All Posts</a>
+            {% for cat in categories %}
+                <a href="{% url 'blog:post_list' %}?category={{ cat.slug }}" 
+                   class="btn btn-sm {% if request.GET.category == cat.slug %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill px-4">
+                   {{ cat.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <div class="row g-4">
+            {% for post in posts %}
+            <div class="col-md-6 mb-4">
+                <div class="premium-card h-100 p-0 overflow-hidden border-0 shadow-sm hover-up">
+                    {% if post.get_featured_image_url %}
+                        <div class="blog-card-img" style="background-image: url('{{ post.get_featured_image_url }}');"></div>
+                    {% else %}
+                        <div class="blog-card-img bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                            <i class="bi bi-journal-text display-4 text-success opacity-25"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="p-4">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">{{ post.category.name|default:"General" }}</span>
+                            <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ post.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <h4 class="fw-bold mb-3"><a href="{% url 'blog:post_detail' post.slug %}" class="text-dark text-decoration-none post-title-link">{{ post.title }}</a></h4>
+                        <p class="text-muted small mb-4 lh-base">{{ post.excerpt|truncatewords:20 }}</p>
+                        <a href="{% url 'blog:post_detail' post.slug %}" class="btn btn-link text-success p-0 fw-bold text-decoration-none">
+                            Read More <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-box-seam display-4 text-muted opacity-25"></i>
+                    <p class="mt-3 text-muted">No posts found yet. Check back later!</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if posts.has_other_pages %}
+        <nav class="mt-5">
+            <ul class="pagination justify-content-center gap-2 border-0">
+                {% if posts.has_previous %}
+                    <li class="page-item"><a class="page-link rounded-circle border-0 bg-light text-dark" href="?page={{ posts.previous_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+                {% endif %}
+                
+                {% for i in posts.paginator.page_range %}
+                    {% if posts.number == i %}
+                        <li class="page-item active"><span class="page-link rounded-circle border-0 bg-success text-white px-3">{{ i }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link rounded-circle border-0 bg-light text-dark px-3" href="?page={{ i }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if posts.has_next %}
+                    <li class="page-item"><a class="page-link rounded-circle border-0 bg-light text-dark" href="?page={{ posts.next_page_number }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="sticky-top" style="top: 100px;">
+            <!-- Featured Posts Widget -->
+            <div class="premium-card p-4 mb-4 border-0 shadow-sm">
+                <h5 class="fw-bold mb-4"><i class="bi bi-star-fill text-warning me-2"></i>Featured Guide</h5>
+                {% for fp in featured_posts %}
+                <div class="d-flex gap-3 mb-4 last-no-mb">
+                    <div class="rounded-3 bg-light" style="width: 60px; height: 60px; flex-shrink: 0; background-image: url('{{ fp.get_featured_image_url }}'); background-size: cover; background-position: center;"></div>
+                    <div>
+                        <h6 class="fw-bold mb-1"><a href="{% url 'blog:post_detail' fp.slug %}" class="text-dark text-decoration-none small">{{ fp.title }}</a></h6>
+                        <span class="text-muted" style="font-size: 0.75rem;">{{ fp.created_at|date:"d M" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                    <p class="text-muted small">No featured posts today.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Newsletter Widget -->
+            <div class="premium-card p-4 text-white border-0 shadow-lg text-center" style="background: var(--gradient-main);">
+                <i class="bi bi-envelope-open display-6 mb-3 text-white"></i>
+                <h5 class="fw-bold">Stay Updated!</h5>
+                <p class="small text-white-50 mb-4">পরীক্ষার সেরা সব টিপস আপনার মেইলে পেতে সাবস্ক্রাইব করুন।</p>
+                <form class="d-grid gap-2">
+                    <input type="email" class="form-control form-control-sm rounded-pill border-0 px-3" placeholder="Your Email">
+                    <button type="button" class="btn btn-light text-primary btn-sm rounded-pill fw-bold">Subscribe</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .blog-card-img {
+        height: 200px;
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.5s;
+    }
+    .hover-up:hover .blog-card-img {
+        transform: scale(1.05);
+    }
+    .hover-up {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .hover-up:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+    }
+    .post-title-link:hover {
+        color: var(--primary) !important;
+    }
+    .last-no-mb:last-child { margin-bottom: 0 !important; }
+</style>
+{% endblock %}

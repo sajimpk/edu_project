@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}IELTS PDF Books | EduVillage{% endblock %}
+
+{% block content %}
+<div class="row animate__animated animate__fadeIn">
+    <!-- Header Section -->
+    <div class="col-12 text-center mb-5">
+        <h1 class="display-4 fw-black text-dark mb-2">IELTS <span class="text-success">Books Collection</span></h1>
+        <p class="text-muted lead">আপনার প্রস্তুতির জন্য অফিসিয়াল Cambridge IELTS বইয়ের (PDF) কালেকশন।</p>
+    </div>
+
+    <!-- Books Grid Section -->
+    <div class="col-12">
+        <div class="row g-4">
+            {% for book in books %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="premium-card text-center p-4 hover-up h-100 d-flex flex-column border-0 shadow-sm" style="border-radius: 20px;">
+                    <!-- Icon / Badge representing Book -->
+                    <div class="mb-4 d-inline-block mx-auto">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px; transition: all 0.3s;">
+                            <i class="bi bi-journal-bookmark-fill display-5 text-success book-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <h5 class="fw-bold mb-1 text-dark">{{ book.title }}</h5>
+                    <p class="small text-muted mb-4 opacity-75">PDF Format</p>
+                    
+                    <div class="mt-auto">
+                        <a href="{{ book.link }}" target="_blank" class="btn btn-outline-success rounded-pill fw-bold w-100 shadow-sm">
+                            <i class="bi bi-cloud-arrow-down-fill me-1"></i> Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">No books available at the moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-up {
+        background: white;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .hover-up:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+        border-color: var(--primary) !important;
+    }
+    .hover-up:hover .book-icon {
+        transform: scale(1.1);
+        color: var(--primary-dark) !important;
+    }
+    .book-icon {
+        transition: transform 0.3s ease;
+    }
+</style>
+{% endblock %}

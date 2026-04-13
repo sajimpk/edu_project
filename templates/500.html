@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}500 - Server Error | EduVillage{% endblock %}
+
+{% block content %}
+<div class="container d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
+    <div class="text-center">
+        <h1 class="display-1 fw-bold text-danger">500</h1>
+        <h2 class="h2 mb-4">Internal Server Error</h2>
+        <p class="lead text-muted mb-5">
+            Something went wrong on our end. Please try again later.
+        </p>
+        <a href="{% url 'index' %}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
+            <i class="bi bi-house-door-fill me-2"></i>Go Home
+        </a>
+    </div>
+</div>
+{% endblock %}

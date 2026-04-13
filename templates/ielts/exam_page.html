@@ -1,0 +1,1931 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> -->
+<style>
+    /* Force Full Page, Hide Standard Site Navigation & Footer */
+    header,
+    footer,
+    nav,
+    .navbar,
+    .topbar {
+        display: none !important;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden !important;
+        background-color: #ededed;
+    }
+
+    /* MATCHING DRAG & DROP STYLES */
+    .matching-drag-item {
+        padding: 6px 14px;
+        background: #fff;
+        border: 2px solid #adb5bd;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #495057;
+        cursor: grab;
+        user-select: none;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .matching-drag-item:active { cursor: grabbing; border-color: #0d6efd; }
+    .matching-drag-item.selected-draft {
+        background: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+        box-shadow: 0 4px 8px rgba(13,110,253,0.3);
+        transform: scale(1.05);
+    }
+    .matching-drop-zone {
+        min-width: 60px;
+        height: 36px;
+        border: 2px dashed #adb5bd;
+        border-radius: 4px;
+        background: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #495057;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0 10px;
+    }
+    .matching-drop-zone.drag-over {
+        background: #e9ecef;
+        border-color: #0d6efd;
+        transform: scale(1.05);
+    }
+    .matching-drop-zone.filled {
+        border-color: #e7f1ff;
+        background: #e7f1ff;
+        color: #0d6efd;
+    }
+
+    #exam-form {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        background-color: #ededed;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .exam-top-bar {
+        background: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 1.5rem;
+    }
+
+    .timer-display {
+        background: #f8f9fa;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-weight: 700;
+        color: red;
+    }
+
+    .exam-split-container {
+        display: flex;
+        height: calc(100vh - 120px);
+    }
+
+    .panel-passage {
+        width: 50%; /* Default width */
+        min-width: 200px;
+        background: white;
+        overflow-y: auto;
+        padding: 1rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .resizer {
+        width: 12px;
+        cursor: col-resize;
+        background-color: #f1f3f5;
+        z-index: 10;
+        transition: background-color 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-left: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+    }
+
+    .resizer::after {
+        content: "⋮";
+        color: #adb5bd;
+        font-size: 1.4rem;
+        font-weight: 900;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+
+    .resizer:hover, .resizer.resizing {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .resizer:hover::after, .resizer.resizing::after {
+        color: #fff;
+    }
+
+    .panel-questions {
+        flex: 1;
+        background: white;
+        overflow-y: auto;
+        padding: 1rem 1.5rem;
+        font-size: 0.95rem;
+        border-left: 1px solid #e2e8f0;
+    }
+
+    .section-container {
+        background: white;
+        padding: 5px 20px;
+        margin-bottom: 15px;
+    }
+
+    /* TFNG / YNNG Premium Design */
+    .tfng-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    
+    .tfng-header {
+        display: flex;
+        align-items: flex-start;
+        padding: 16px 20px;
+        gap: 15px;
+    }
+    
+    .tfng-qnum {
+        background: #1e293b;
+        color: white;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+    
+    .tfng-text {
+        font-size: 0.95rem;
+        color: #1e293b;
+        line-height: 1.6;
+        padding-top: 4px;
+        flex-grow: 1;
+    }
+    
+    .tfng-options-grid {
+        display: flex;
+        border-top: 1px solid #f1f5f9;
+        background: #fcfcfc;
+    }
+    
+    .tfng-option-item {
+        flex: 1;
+        padding: 14px 10px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-right: 1px solid #f1f5f9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+    }
+    
+    .tfng-option-item:last-child {
+        border-right: none;
+    }
+    
+    .tfng-option-item:hover {
+        background: #f8fafc;
+        color: #0d6efd;
+    }
+    
+    /* Selection States matching image logic */
+    .tfng-option-item.selected {
+        color: white !important;
+    }
+    
+    /* Default selected color if we don't know the type */
+    .tfng-option-item.selected {
+        background: #0d6efd;
+    }
+    
+    /* Specific styles to match the image colors with higher priority */
+    .tfng-option-item.selected[data-val="YES"],
+    .tfng-option-item.selected[data-val="TRUE"] {
+        background: #2d6a4f !important; /* Premium Green */
+        color: white !important;
+    }
+    
+    .tfng-option-item.selected[data-val="NO"],
+    .tfng-option-item.selected[data-val="FALSE"] {
+        background: #8b1a1a !important; /* Deep Red like image */
+        color: white !important;
+    }
+    
+    .tfng-option-item.selected[data-val="NOT GIVEN"] {
+        background: #5d4037 !important; /* Brownish like image */
+        color: white !important;
+    }
+    
+    .tfng-option-item.active-preview {
+        background: #e0f2fe;
+        color: #0d6efd;
+    }
+
+    /* Mobile Responsive Layout */
+    @media (max-width: 991px) {
+        .exam-split-container {
+            flex-direction: column !important;
+        }
+        .panel-passage {
+            width: 100% !important;
+            height: 40% !important;
+            min-height: 250px;
+            border-bottom: 2px solid #adb5bd;
+            border-right: none !important;
+            flex-shrink: 0;
+        }
+        .panel-questions {
+            width: 100% !important;
+            height: 60% !important;
+            border-left: none !important;
+        }
+        .resizer {
+            display: none !important;
+        }
+    }
+
+    .choice-item {
+        padding: 8px;
+        border: 1px solid #ccc;
+        margin-bottom: 5px;
+        cursor: pointer;
+    }
+
+    .choice-item.selected {
+        background: #0984e3;
+        color: white;
+    }
+
+    .question-text-content p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Make all images responsive inside passages and questions */
+    .panel-passage img, .panel-questions img, .section-container img {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain;
+    }
+
+    /* Support for tables from CKEditor */
+    .panel-passage table, .section-container table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 15px 0;
+        font-size: 0.9rem;
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .panel-passage table th, .panel-passage table td,
+    .section-container table th, .section-container table td {
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+        text-align: left;
+    }
+    .panel-passage table th, .section-container table th {
+        background-color: #f8f9fa;
+        font-weight: 700;
+    }
+    .panel-passage table tr:nth-child(even), .section-container table tr:nth-child(even) {
+        background-color: #fafafa;
+    }
+
+    /* HEADER TOGGLE STYLES */
+    .exam-header-wrapper {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        min-height: 55px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.header-collapsed .exam-header-wrapper {
+        display: none;
+        position: absolute;
+        width: 100%;
+    }
+
+    body.header-collapsed .exam-split-container {
+        height: 100vh !important;
+    }
+
+    .show-header-tab {
+        position: fixed;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(13, 110, 253, 0.9);
+        backdrop-filter: blur(4px);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 0 0 10px 10px;
+        padding: 4px 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        z-index: 10005;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .show-header-tab:hover {
+        padding-top: 10px;
+        background: #0b5ed7;
+    }
+
+    body.header-collapsed .show-header-tab {
+        top: 0;
+        opacity: 1;
+        visibility: visible;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .exam-header-inner {
+        min-height: 52px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 1.5rem;
+        background: linear-gradient(to right, rgba(255,255,255,0.8), rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+    }
+
+    .nav-dots-container {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 5px;
+        align-items: center;
+        min-width: 0;
+    }
+
+    /* UNIQUE PART TABS DESIGN */
+    .part-tab-container {
+        display: flex;
+        gap: 8px;
+        padding: 6px;
+        background: #f1f3f5;
+        border-radius: 10px;
+        flex: 1;
+        max-width: fit-content;
+    }
+
+    .part-tab {
+        border: 1px solid #dee2e6;
+        background: #f8f9fa;
+        padding: 6px 16px;
+        margin: 0 2px;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        color: #495057 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 80px;
+    }
+
+    .part-tab:not(.active):hover {
+        background: rgba(13, 110, 253, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .part-tab.active {
+        background: white !important;
+        color: #0d6efd !important;
+        border-color: #0d6efd;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1);
+        z-index: 1;
+    }
+
+    .part-tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 20%;
+        right: 20%;
+        height: 3px;
+        background: #0d6efd;
+        border-radius: 3px 3px 0 0;
+    }
+
+    /* Compact horizontal dots inside active tab */
+    .dots-part-container {
+        display: none !important;
+        margin-left: 10px;
+        padding-left: 10px;
+        border-left: 2px solid rgba(13, 110, 253, 0.2);
+        max-width: 1000px;
+        overflow-x: auto;
+        gap: 2px;
+        align-items: center;
+        scroll-behavior: smooth;
+        padding-bottom: 2px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+    }
+
+    .dots-part-container::-webkit-scrollbar {
+        height: 4px;
+    }
+    .dots-part-container::-webkit-scrollbar-thumb {
+        background: rgba(13, 110, 253, 0.3);
+        border-radius: 10px;
+    }
+
+    .part-tab.active .dots-part-container {
+        display: flex !important;
+    }
+
+    .nav-dot {
+        min-width: 22px;
+        height: 20px;
+        font-size: 8.5px;
+        font-weight: 700;
+        border-radius: 3px;
+        border: 1px solid #dee2e6;
+        background: white;
+        color: #6c757d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .nav-dot:hover {
+        border-color: #0d6efd;
+        color: #0d6efd;
+        transform: scale(1.1);
+    }
+
+    .nav-dot.answered {
+        background: #0d6efd !important;
+        color: white !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+    }
+
+    .part-label {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+    }
+
+    .part-progress-tracker {
+        font-size: 11px;
+        background: #dee2e6;
+        color: #495057;
+        padding: 1px 6px;
+        border-radius: 10px;
+        margin-left: 5px;
+    }
+
+    .part-tab.active .part-progress-tracker {
+        background: #0d6efd;
+        color: white;
+    }
+
+    .qjump:hover {
+        background-color: #e9ecef;
+        border-radius: 4px;
+        padding: 2px 4px;
+        color: #0d6efd;
+    }
+
+    .locator-highlight {
+        background-color: #ffc107;
+        color: #000;
+        border-radius: 4px;
+        padding: 2px;
+    }
+
+    /* Selection Highlighter Toolbar */
+    #highlight-tools {
+        position: absolute;
+        display: none;
+        background: white;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        border-radius: 50px;
+        padding: 6px 12px;
+        z-index: 10000;
+        gap: 8px;
+        align-items: center;
+        transition: opacity 0.2s ease;
+    }
+
+    .hl-btn {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: transform 0.2s;
+    }
+
+    .hl-btn:hover {
+        transform: scale(1.2);
+        border-color: rgba(0,0,0,0.1);
+    }
+
+    .hl-yellow { background: #ffeb3b; }
+    .hl-green { background: #a5d6a7; }
+    .hl-pink { background: #f48fb1; }
+    .hl-remove { 
+        background: #f8f9fa; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 14px;
+        color: #dc3545;
+    }
+
+    /* The actual highlighted text */
+    .ielts-highlight {
+        background-color: var(--hl-color, #ffeb3b);
+        padding: 2px 0;
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+        transition: filter 0.2s;
+    }
+
+    .ielts-highlight:hover {
+        filter: brightness(0.9);
+    }
+
+    /* Hover "Remove" text overlay */
+    .ielts-highlight:hover::after {
+        content: "Remove";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        margin-bottom: 4px;
+        z-index: 10001;
+    }
+
+    /* --- RESPONSIVE DESIGN --- */
+
+    /* Desktop/Tablet Split */
+    .exam-split-container {
+        display: flex;
+        height: calc(100vh - 60px); /* Adjust height to match new header height */
+        transition: all 0.3s ease;
+    }
+
+    @media (max-width: 992px) {
+        .exam-split-container {
+            flex-direction: column;
+            height: auto;
+            overflow-y: auto;
+        }
+        .panel-passage, .panel-questions {
+            max-width: 100% !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            border-right: none !important;
+            border-bottom: 2px solid #dee2e6;
+        }
+        #exam-form {
+            position: relative;
+            height: auto;
+            overflow-y: auto;
+        }
+        body {
+            overflow: auto !important;
+        }
+    }
+
+    /* Header Responsiveness */
+    @media (max-width: 768px) {
+        .exam-header-inner {
+            flex-direction: row; 
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 8px !important;
+            gap: 10px;
+        }
+
+        .part-tab-container {
+            flex-direction: row !important;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            padding: 4px;
+        }
+
+        .part-tab {
+            min-width: 50px;
+            padding: 6px 10px;
+        }
+        .part-tab.active {
+            flex: 1 1 auto;
+            min-width: 160px; /* Take remaining space, but enough to show dots */
+            justify-content: flex-start;
+        }
+        .part-tab.active .dots-part-container {
+            flex: 1;
+            max-width: unset;
+        }
+        .part-label { font-size: 11px; }
+        .part-progress-tracker { display: none; } /* Hide tracker on mobile to save space */
+        
+        .timer-display { 
+            font-size: 0.85rem !important;
+            padding: 4px 10px !important;
+            min-width: 70px !important;
+        }
+        .test-title-badge { display: none; } /* Hide title on mobile to save space */
+    }
+
+
+    /* --- CUSTOM STYLISH OVERLAY --- */
+    #custom-confirm-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 20000;
+    }
+
+    .confirm-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 24px;
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .confirm-icon {
+        width: 80px;
+        height: 80px;
+        background: #eef2ff;
+        color: #4f46e5;
+        font-size: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .confirm-btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 2rem;
+    }
+
+    .btn-confirm-yes {
+        background: #0d6efd;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        flex: 1;
+        transition: all 0.2s;
+    }
+
+    .btn-confirm-no {
+        background: #f1f3f5;
+        color: #495057;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        flex: 1;
+        transition: all 0.2s;
+    }
+
+    .btn-confirm-yes:hover { background: #0b5ed7; transform: translateY(-2px); }
+    .btn-confirm-no:hover { background: #e9ecef; transform: translateY(-2px); }
+
+    /* STYLISH TEST TITLE */
+    .test-title-badge {
+        display: flex;
+        align-items: center;
+        background: #f8faff;
+        padding: 2px 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(13, 110, 253, 0.1);
+    }
+
+    .test-title-main {
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: -0.1px;
+        background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-transform: capitalize;
+    }
+
+    .test-title-icon {
+        background: #0d6efd;
+        color: white;
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 6px;
+        font-size: 0.70rem;
+    }
+
+    /* Clean Auto-Resizing Blank Input Style */
+    .ielts-inline-input, .blank-input {
+        border: none !important;
+        border-bottom: 2px solid #adb5bd !important;
+        border-radius: 0 !important;
+        font-weight: 600 !important;
+        color: #0d6efd !important;
+        background-color: transparent !important;
+        outline: none !important;
+        padding: 0 4px !important;
+        margin: 0 4px !important;
+        line-height: inherit !important;
+        vertical-align: baseline !important;
+        display: inline-block !important;
+        min-width: 30px !important;
+        text-align: center !important;
+        font-size: inherit !important;
+        height: auto !important;
+        box-shadow: none !important;
+        transition: border-color 0.2s, background-color 0.2s !important;
+        font-family: inherit !important;
+    }
+
+    .ielts-inline-input:focus, .blank-input:focus {
+        border-bottom-color: #0d6efd !important;
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+
+    /* Unified, Modern Question Number Badge (Easy on eyes) */
+    .qnum-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        margin-right: 12px;
+        margin-top: 2px;
+        text-decoration: none;
+    }
+
+    .qnum-badge:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #0d6efd;
+        transform: translateY(-1px);
+    }
+    
+    .blank-input::placeholder {
+        color: #adb5bd !important;
+        font-weight: normal !important;
+        font-size: 0.9em !important;
+    }
+
+    .form-select.blank-input {
+        padding-right: 1.5rem !important;
+        padding-left: 0.25rem !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 0.2rem center !important;
+        background-size: 10px 8px !important;
+        appearance: none !important;
+        cursor: pointer;
+    }
+
+    /* LOCKED STATE STYLES */
+    .locked-overlay {
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        right: 0;
+        top: 0;
+        background: transparent;
+        z-index: 10000;
+        pointer-events: none;
+        display: none;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding-bottom: 50px;
+    }
+
+    .lock-banner {
+        pointer-events: auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(13, 110, 253, 0.2);
+        padding: 20px 40px;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    body.is-test-locked .locked-overlay {
+        display: flex;
+    }
+
+    body.is-test-locked .panel-questions {
+        position: relative;
+    }
+
+    body.is-test-locked .panel-questions .section-container {
+        pointer-events: none !important;
+        opacity: 0.6;
+        filter: blur(2px);
+        transition: filter 0.3s ease;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .lock-icon-circle {
+        width: 60px;
+        height: 60px;
+        background: #f8f9fa;
+        color: #dc3545;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>
+    {% if is_locked %}
+    document.body.classList.add('is-test-locked');
+    {% endif %}
+</script>
+<form method="POST" id="exam-form" action="{% url 'ielts:exam' test.slug %}" autocomplete="off">
+    {% csrf_token %}
+
+    <!-- PULL DOWN TOGGLE FOR HIDDEN HEADER -->
+    <button type="button" class="show-header-tab shadow-lg" onclick="toggleHeader()">
+        <i class="bi bi-chevron-down me-2"></i>
+        <span>Unhide</span>
+        <div class="ms-3 ps-3 border-start border-white border-opacity-25 d-flex align-items-center" style="font-variant-numeric: tabular-nums;">
+            <i class="bi bi-clock me-2"></i>
+            <span id="timer-mini">--:--</span>
+        </div>
+    </button>
+
+    <!-- HEADER WRAPPER (Top & Bottom features unified) -->
+    <div class="exam-header-wrapper shadow-sm sticky-top" style="z-index: 10001;" id="examHeaderWrapper">
+        <!-- TOP NAVBAR ROW -->
+        <div class="exam-header-inner flex-wrap">
+            <!-- Left Side: Title Badge -->
+            <div class="test-title-badge">
+                <div class="test-title-icon">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                <span class="test-title-main">{{ test.title }}</span>
+            </div>
+
+            <!-- Middle: Part Tabs -->
+            <div class="part-tab-container nav m-0" id="examNav" role="tablist">
+                {% for p in passages %}
+                <button class="part-tab nav-link {% if forloop.first %}active{% endif %}"
+                    id="part-{{ p.passage.id }}-tab" data-bs-toggle="pill" data-bs-target="#part{{ p.passage.id }}"
+                    type="button" role="tab" aria-controls="part{{ p.passage.id }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <span class="part-label">P{{ forloop.counter }}</span>
+                        <span class="part-progress-tracker" data-pid="{{ p.passage.id }}"
+                            id="prog-part-{{ p.passage.id }}">(0/0)</span>
+                    </div>
+                    <!-- Dots wrapper -->
+                    <div class="dots-part-container" id="dots-part-{{ p.passage.id }}"></div>
+                </button>
+                {% endfor %}
+            </div>
+
+            <!-- Right Side: Timer & Finish -->
+            <div class="d-flex align-items-center gap-3">
+                <!-- Progress Summary (Score Card) -->
+                <div class="d-none d-md-flex align-items-center bg-white border border-secondary border-opacity-10 rounded-pill px-3 py-1 shadow-sm">
+                    <div class="d-flex flex-column align-items-center">
+                        <span class="text-muted fw-bold" style="font-size: 9px; text-transform: uppercase; line-height: 1;">Answered</span>
+                        <div class="d-flex align-items-center">
+                            <span id="answered-total-count" class="fw-black text-primary fs-6">0</span>
+                            <span class="text-muted mx-1" style="font-size: 10px;">/</span>
+                            <span id="total-questions-count" class="text-muted fw-bold" style="font-size: 11px;">40</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-light text-danger fw-bold px-3 py-1 rounded-pill border border-danger border-opacity-25 fs-6 d-flex align-items-center justify-content-center timer-display shadow-sm" style="min-width: 100px; font-variant-numeric: tabular-nums;">
+                    <i class="bi bi-clock-fill me-2" style="font-size: 0.9rem;"></i>
+                    <span id="timer">{% if test.duration_minutes %}{{ test.duration_minutes }}{% else %}60{% endif %}:00</span>
+                </div>
+                {% if is_locked %}
+                    <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-danger btn-sm px-4 fw-black shadow-sm rounded-pill d-flex align-items-center gap-2">
+                        <i class="bi bi-lock-fill"></i>
+                        Login to Start
+                    </a>
+                {% else %}
+                    <button type="button" class="btn btn-light btn-sm border px-3 rounded-pill me-1" onclick="toggleHeader()" title="Full Screen View">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 fw-black shadow-sm rounded-pill" onclick="submitExam()">Finish</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- HIGHLIGHT TOOLBAR -->
+    <div id="highlight-tools">
+        <div class="hl-btn hl-yellow" onclick="applyHighlight('#ffeb3b')" title="Yellow"></div>
+        <div class="hl-btn hl-green" onclick="applyHighlight('#a5d6a7')" title="Green"></div>
+        <div class="hl-btn hl-pink" onclick="applyHighlight('#f48fb1')" title="Pink"></div>
+        <div class="hl-btn hl-remove" onclick="removeHighlight()" title="Remove Highlight"><i class="bi bi-x"></i></div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="tab-content flex-grow-1" id="examNavContent">
+        {% for p in passages %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %} h-100" id="part{{ p.passage.id }}"
+            role="tabpanel" aria-labelledby="part-{{ p.passage.id }}-tab">
+            <div class="exam-split-container">
+
+                <!-- PASSAGE -->
+                <div class="panel-passage">
+                    {% comment %} <h4 class="mb-4">Passage {{ forloop.counter }}</h4> {% endcomment %}
+                    {{ p.content|safe }}
+                </div>
+
+                <!-- DRAGGABLE RESIZER -->
+                <div class="resizer"></div>
+
+                <!-- QUESTIONS -->
+                <div class="panel-questions">
+                    {% for sec in sections %}
+                    {% if sec.section.passage.id == p.passage.id %}
+                    <div class="section-container">
+                        <h5 class="mb-3 text-primary fw-bold">{{ sec.section.title }}</h5>
+                        <p class="text-muted small mb-4">{{ sec.section.instruction_text|safe }}</p>
+
+                        {% if sec.section.get_matching_options_list %}
+                        <div class="matching-options-bank mb-4 p-3 bg-white rounded-3 shadow-sm border border-primary border-opacity-25">
+                            <div class="fw-bold text-primary mb-3 small"><i class="bi bi-hand-index-thumb me-1"></i>Tap an option to pick it up, then tap a box below (or Drag & Drop):</div>
+                            <div class="d-flex flex-wrap gap-2 options-bank-container">
+                                {% for opt in sec.section.get_matching_options_list %}
+                                <div class="matching-drag-item" data-val="{{ opt }}" draggable="true" onclick="selectDraftOption(this)">
+                                    {{ opt }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% for item in sec.questions %}
+                        <!-- QUESTION -->
+                        <div class="question-row mb-4" id="q-{{ item.question.id }}" 
+                             data-id="{{ item.question.id }}" 
+                             data-qnum="{{ item.question.number }}"
+                             data-start="{{ sec.section.start_number }}"
+                             data-end="{{ sec.section.end_number }}"
+                             data-qtype="{{ sec.section.question_type }}">
+                            <div class="mb-2">
+                                {% if sec.section.question_type in 'sent_comp,summary_completion,note_completion,table_completion,flow_chart_completion,diagram_label_completion,short_answer,matching_headings,matching_features,matching_info,matching_sentence_endings,pick_from_list,completion,matching' %}
+                                    {% if item.blank_keys %}
+                                        {{ item.html|safe }}
+                                    {% else %}
+                                        {% if sec.section.question_type in 'matching_headings,matching_features,matching_info,matching_sentence_endings,pick_from_list,matching' %}
+                                            <div class="d-flex align-items-center mb-2 p-1">
+                                                <div class="qjump fw-bold me-3 d-flex align-items-center justify-content-center" onclick="jumpToLocator('{{ item.question.number }}')" 
+                                                     style="width: 28px; height: 28px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 3px; font-size: 0.95rem; cursor: pointer; color: #333; flex-shrink: 0;">
+                                                    {{ item.question.number }}
+                                                </div>
+                                                <div class="me-3">
+                                                    {% if item.question.choices.all %}
+                                                        <select name="ans_{{ item.first_ans_key|default:item.question.id }}" 
+                                                                class="form-select shadow-none blank-input" 
+                                                                data-key="{{ item.question.number }}"
+                                                                style="width: 85px; height: 36px; font-size: 0.9rem; cursor: pointer; padding-top: 0; padding-bottom: 0;">
+                                                            <option value="">-</option>
+                                                            {% for choice in item.question.choices.all %}
+                                                                <option value="{{ choice.label|default:choice.text }}">{{ choice.label|default:choice.text }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    {% elif sec.section.get_matching_options_list %}
+                                                        <div class="matching-drop-zone" 
+                                                             data-input-target="ans_{{ item.first_ans_key|default:item.question.id }}"
+                                                             onclick="placeDraftOption(this)" 
+                                                             ondragover="allowDrop(event)" 
+                                                             ondragleave="dragLeave(event)" 
+                                                             ondrop="drop(event)">
+                                                            <span style="opacity:0.4; font-size:0.75rem;">Drop here</span>
+                                                        </div>
+                                                        <input type="hidden" name="ans_{{ item.first_ans_key|default:item.question.id }}" 
+                                                               id="ans_{{ item.first_ans_key|default:item.question.id }}" 
+                                                               data-key="{{ item.question.number }}" 
+                                                               value="" class="blank-input">
+                                                    {% else %}
+                                                         <input type="text" name="ans_{{ item.first_ans_key|default:item.question.id }}" 
+                                                                class="ielts-inline-input blank-input" 
+                                                                autocomplete="off" 
+                                                                data-key="{{ item.question.number }}"
+                                                                style="width: 30px;"
+                                                                oninput="this.style.width = Math.max(30, (this.value.length || this.placeholder.length || 1) * 9 + 10) + 'px'">
+                                                    {% endif %}
+                                                </div>
+                                                    <div class="question-text-content mb-0" style="font-size: 0.95rem; color: #222;">
+                                                        {{ item.question.text|safe }}
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="d-flex align-items-start mb-2">
+                                                    <div class="qnum-badge" onclick="jumpToLocator('{{ item.question.number }}')">
+                                                        {{ item.question.number }}
+                                                    </div>
+                                                    <div class="question-text-content" style="font-size: 0.95rem; color: #222; padding-top: 3px;">
+                                                        {{ item.question.text|safe }}
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 mb-3 text-start" style="padding-left: 36px;">
+                                                    <input type="text" name="ans_{{ item.first_ans_key|default:item.question.id }}" class="ielts-inline-input blank-input" value="" placeholder="{{ item.question.number }}" autocomplete="off" data-key="{{ item.question.number }}" style="width: 30px;" oninput="this.style.width = Math.max(30, (this.value.length || this.placeholder.length || 1) * 9 + 10) + 'px'">
+                                                </div>
+                                            {% endif %}
+                                    {% endif %}
+                                 {% elif 'tf' not in sec.section.question_type|lower and 'yn' not in sec.section.question_type|lower and 'true' not in sec.section.question_type|lower and 'yes' not in sec.section.question_type|lower %}
+                                <div class="d-flex align-items-start mb-2">
+                                    {% if sec.section.question_type != 'choose_two' %}
+                                    <div class="qnum-badge" onclick="jumpToLocator('{{ item.question.number }}')">
+                                        {{ item.question.number }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="question-text-content" style="font-size: 0.95rem;">
+                                        {{ item.question.text|safe }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Premium TFNG and YNNG Layout -->
+                            {% if 'tf' in sec.section.question_type|lower or 'yn' in sec.section.question_type|lower or 'true' in sec.section.question_type|lower or 'yes' in sec.section.question_type|lower %}
+                                <div class="tfng-card" id="q-container-{{ item.question.id }}">
+                                    <div class="tfng-header">
+                                        <div class="tfng-qnum" onclick="jumpToLocator('{{ item.question.number }}')" style="cursor: pointer;">
+                                            {{ item.question.number }}
+                                        </div>
+                                        <div class="tfng-text">
+                                            {{ item.question.text|safe }}
+                                        </div>
+                                    </div>
+                                    <div class="tfng-options-grid">
+                                        {% for choice in item.question.choices.all %}
+                                        <div class="tfng-option-item" 
+                                             data-val="{{ choice.text|upper }}"
+                                             onclick="selectTfngOption(this, {{ item.question.id }}, '{{ item.question.number }}')">
+                                            <input type="radio" name="choice_{{ item.question.id }}" value="{{ choice.id }}" class="d-none">
+                                            {{ choice.text }}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% elif sec.section.question_type == 'mcq' %}
+                            <div class="mt-2 text-start">
+                                {% for choice in item.question.choices.all %}
+                                <div class="choice-item d-block"
+                                    onclick="selectChoiceRadios(this, {{ item.question.id }})">
+                                    <input type="radio" name="choice_{{ item.question.id }}" value="{{ choice.id }}"
+                                        class="d-none">
+                                    {{ choice.label|safe }} {{ choice.text|safe }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <!-- MULTI-SELECT Choices (Choose TWO/THREE etc) -->
+                            {% if sec.section.question_type == 'choose_two' %}
+                            <div class="mt-2 text-start">
+                                {% for choice in item.question.choices.all %}
+                                <div class="choice-item d-block"
+                                    onclick="selectChoiceCheckbox(this, {{ item.question.id }}, {{ sec.question_count|default:2 }})">
+                                    <input type="checkbox" name="choice_{{ item.question.id }}" value="{{ choice.id }}"
+                                        class="d-none">
+                                    {{ choice.label|safe }} {{ choice.text|safe }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- LOCKED OVERLAY FOR GUESTS -->
+    {% if is_locked %}
+    <div class="locked-overlay">
+        <div class="lock-banner">
+            <div class="lock-icon-circle">
+                <i class="bi bi-lock-fill"></i>
+            </div>
+            <div>
+                <h5 class="fw-black mb-1">Test results are locked</h5>
+                <p class="text-muted small mb-0">Please login to start your test and see your results.</p>
+            </div>
+            <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-primary w-100 rounded-pill fw-bold">Login Now</a>
+        </div>
+    </div>
+    {% endif %}
+
+</form>
+
+<!-- Custom Stylish Confirmation Overlay -->
+<div id="custom-confirm-overlay">
+    <div class="confirm-card">
+        <div class="confirm-icon">
+            <i class="bi bi-question-circle-fill"></i>
+        </div>
+        <h3 class="fw-bold text-dark mb-2">Ready to finish?</h3>
+        <p class="text-muted">You are about to submit your exam. Once submitted, you cannot change your answers.</p>
+        <div class="confirm-btn-group">
+            <button type="button" class="btn-confirm-no" onclick="closeConfirm()">Cancel</button>
+            <button type="button" class="btn-confirm-yes shadow-sm" onclick="confirmSubmit()">Finish Test</button>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let timeLeft = {% if test.duration_minutes %}{{ test.duration_minutes }}{% else %}60{% endif %} * 60;
+
+    function timer() {
+        if (timeLeft <= 0) {
+            document.getElementById('exam-form').submit();
+            return;
+        }
+        let min = Math.floor(timeLeft / 60);
+        let sec = timeLeft % 60;
+        if (min < 10) min = "0" + min;
+        if (sec < 10) sec = "0" + sec;
+        const timeStr = min + ":" + sec;
+        document.getElementById("timer").innerHTML = timeStr;
+        const miniTimer = document.getElementById("timer-mini");
+        if (miniTimer) miniTimer.innerHTML = timeStr;
+        timeLeft--;
+    }
+    function jumpToLocator(num) {
+        // Find the L[num] span in the passage
+        const locator = document.querySelector(`.panel-passage .q-locator[data-num="${num}"]`) || 
+                        Array.from(document.querySelectorAll('.panel-passage span')).find(el => el.textContent.trim() === `L${num}` || el.textContent.includes(`[Q${num}]`));
+        
+        if (locator) {
+            locator.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            locator.style.backgroundColor = '#fff3cd';
+            setTimeout(() => { locator.style.backgroundColor = ''; }, 2000);
+        }
+    }
+
+    setInterval(() => {
+        {% if not is_locked %}
+        timer();
+        {% endif %}
+    }, 1000);
+
+    function updatePartProgress() {
+        let grandAnswered = 0;
+        let grandTotal = 0;
+
+        const panes = document.querySelectorAll('.tab-pane');
+        panes.forEach((pane) => {
+            const passageId = pane.id.replace('part', '');
+
+            // Re-tally based on dots inside the tab button
+            const dotsContainer = document.getElementById(`dots-part-${passageId}`);
+            if (dotsContainer) {
+                const total = dotsContainer.querySelectorAll('.nav-dot').length;
+                const answered = dotsContainer.querySelectorAll('.nav-dot.answered').length;
+
+                grandAnswered += answered;
+                grandTotal += total;
+
+                const tracker = document.getElementById(`prog-part-${passageId}`);
+                if (tracker) {
+                    tracker.textContent = `(${answered}/${total})`;
+                }
+            }
+        });
+
+        // Update overall score card in header
+        const globalAnswered = document.getElementById('answered-total-count');
+        const globalTotal = document.getElementById('total-questions-count');
+        if (globalAnswered) globalAnswered.textContent = grandAnswered;
+        if (globalTotal) globalTotal.textContent = grandTotal;
+    }
+
+    function selectChoiceRadios(el, qId) {
+        let parent = el.parentElement;
+        parent.querySelectorAll(".choice-item").forEach(x => x.classList.remove("selected"));
+        el.classList.add("selected");
+        const radio = el.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+
+        const navDot = document.getElementById("nav-" + qId);
+        if (navDot) navDot.classList.add("answered");
+
+        updatePartProgress();
+    }
+
+    function selectTfngOption(el, qId, qNum) {
+        let parent = el.parentElement;
+        parent.querySelectorAll(".tfng-option-item").forEach(x => x.classList.remove("selected"));
+        el.classList.add("selected");
+        
+        const radio = el.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+
+        // Mark corresponding navigation dot as answered
+        // Note: The dot ID might be nav-{qNum} or nav-{qId} depending on how dot IDs are generated
+        const navDot = document.getElementById("nav-" + qNum) || document.getElementById("nav-" + qId);
+        if (navDot) navDot.classList.add("answered");
+
+        updatePartProgress();
+    }
+
+    function selectChoiceCheckbox(el, qId, limit) {
+        const checkbox = el.querySelector('input[type="checkbox"]');
+        const parent = el.parentElement;
+        const checkedCount = parent.querySelectorAll('input[type="checkbox"]:checked').length;
+
+        // If trying to check a new one but limit reached, stop
+        if (checkbox && !checkbox.checked && limit && checkedCount >= limit) {
+            return;
+        }
+
+        el.classList.toggle("selected");
+        if (checkbox) checkbox.checked = !checkbox.checked;
+
+        const anyCheckedItems = parent.querySelectorAll('input[type="checkbox"]:checked');
+        const row = el.closest('.question-row');
+        const start = parseInt(row.getAttribute('data-start'));
+        const end = parseInt(row.getAttribute('data-end'));
+        const qType = row.getAttribute('data-qtype');
+
+        if (qType === 'choose_two' && !isNaN(start) && !isNaN(end)) {
+            // Light up dots sequentially based on how many boxes are checked
+            for (let n = start; n <= end; n++) {
+                const dot = document.getElementById("nav-" + n);
+                if (dot) {
+                    if (anyCheckedItems.length >= (n - start + 1)) {
+                        dot.classList.add("answered");
+                    } else {
+                        dot.classList.remove("answered");
+                    }
+                }
+            }
+        } else {
+            const anyChecked = anyCheckedItems.length > 0;
+            const navDot = document.getElementById("nav-" + qId);
+            if (anyChecked) {
+                if (navDot) navDot.classList.add("answered");
+            } else {
+                if (navDot) navDot.classList.remove("answered");
+            }
+        }
+
+        updatePartProgress();
+    }
+
+    function scrollQ(num, passageId, dataKey = null) {
+        // Activate part tab
+        const triggerEl = document.querySelector('#part-' + passageId + '-tab');
+        if (triggerEl) {
+            const tabTrigger = new bootstrap.Tab(triggerEl);
+            tabTrigger.show();
+        }
+
+        // Wait for tab animation, scroll panel
+        setTimeout(() => {
+            const el = document.getElementById("q-" + num);
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+                // Find input to focus
+                let inputEl;
+                if (dataKey) {
+                    // Try to find by strictly matching the key or the number
+                    inputEl = el.querySelector(`.blank-input[data-key="${dataKey}"]`) || 
+                              el.querySelector(`.blank-input[placeholder="${dataKey}"]`);
+                } else {
+                    inputEl = el.querySelector('input[type="radio"], input[type="checkbox"], select');
+                }
+
+                if (inputEl) {
+                    inputEl.focus({ preventScroll: true });
+                }
+
+                // Add a blink effect so the user sees which question was targeted
+                if (dataKey && inputEl) {
+                    inputEl.style.transition = "background-color 0.4s ease, transform 0.4s ease";
+                    inputEl.style.backgroundColor = "rgba(13, 110, 253, 0.2)";
+                    inputEl.style.transform = "scale(1.1)";
+                    setTimeout(() => {
+                        inputEl.style.backgroundColor = "";
+                        inputEl.style.transform = "";
+                    }, 1500);
+                } else {
+                    el.style.transition = "background-color 0.4s ease";
+                    el.style.backgroundColor = "rgba(13, 110, 253, 0.1)"; // Light blue highlight
+                    el.style.borderRadius = "8px";
+                    setTimeout(() => {
+                        el.style.backgroundColor = "transparent";
+                    }, 1500);
+                }
+            }
+        }, 150);
+    }
+
+    
+
+    function submitExam() {
+        const form = document.getElementById('exam-form');
+        if (!form) {
+            console.error("Exam form not found!");
+            return;
+        }
+
+        // Check for answers
+        let answeredCount = 0;
+        
+        // Radio/Checkbox
+        answeredCount += form.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked').length;
+        
+        // Text inputs
+        form.querySelectorAll('.blank-input').forEach(inp => {
+            if (inp.value && inp.value.trim() !== "") answeredCount++;
+        });
+
+        if (answeredCount === 0) {
+            if (!confirm("Warning: You haven't answered any questions yet. Do you still want to finish?")) {
+                return;
+            }
+        }
+
+        const overlay = document.getElementById('custom-confirm-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        } else {
+            // Fallback if overlay is somehow missing
+            if (confirm("Are you sure you want to submit your test?")) {
+                form.submit();
+            }
+        }
+    }
+
+    function closeConfirm() {
+        document.getElementById('custom-confirm-overlay').style.display = 'none';
+    }
+
+    function confirmSubmit() {
+        const btn = document.querySelector('.btn-confirm-yes');
+        if (btn) {
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+            btn.disabled = true;
+        }
+        const form = document.getElementById('exam-form');
+        if (form) {
+            form.submit();
+        } else {
+            // Last resort
+            document.querySelector('#exam-form').submit();
+        }
+    }
+
+    document.addEventListener('input', function (e) {
+        if (e.target && (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'select' || e.target.tagName.toLowerCase() === 'textarea')) {
+            const dataKey = e.target.getAttribute('data-key');
+            if (dataKey) {
+                const navDot = document.getElementById("nav-" + dataKey);
+                if (navDot) {
+                    if (e.target.value.trim() !== "") {
+                        navDot.classList.add("answered");
+                    } else {
+                        navDot.classList.remove("answered");
+                    }
+                }
+            }
+            updatePartProgress();
+        }
+    });
+
+    // Populate the nav dots dynamically based on the inputs in the page
+    document.addEventListener("DOMContentLoaded", function () {
+        const panes = document.querySelectorAll('.tab-pane');
+        panes.forEach((pane, idx) => {
+            const passageId = pane.id.replace('part', '');
+            const dotsContainer = document.getElementById("dots-part-" + passageId);
+            
+            if (dotsContainer) {
+                dotsContainer.innerHTML = "";
+
+                const extractedQuestions = new Map();
+
+                // Find standard questions based on explicit data attributes
+                pane.querySelectorAll('.question-row').forEach(row => {
+                    const hasBlanks = row.querySelector('.blank-input') !== null;
+                    if (!hasBlanks) {
+                        const qId = row.getAttribute('data-id');
+                        const start = parseInt(row.getAttribute('data-start'));
+                        const end = parseInt(row.getAttribute('data-end'));
+                        const qType = row.getAttribute('data-qtype');
+
+                        if (qType === 'choose_two' && !isNaN(start) && !isNaN(end)) {
+                            // Generate dots for each number in range
+                            for (let n = start; n <= end; n++) {
+                                extractedQuestions.set(n, { qid: qId, display: n, type: 'range', qnum: n });
+                            }
+                        } else {
+                            const rawNum = row.getAttribute('data-qnum');
+                            if (rawNum) {
+                                const displayNum = rawNum.replace(/[^0-9]/g, '');
+                                const qnumInt = parseInt(displayNum);
+                                if (!isNaN(qnumInt)) {
+                                    extractedQuestions.set(qnumInt, { qid: qId, display: displayNum, type: 'standard' });
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Find blank inputs individually
+                pane.querySelectorAll('.blank-input').forEach(inp => {
+                    const numRaw = inp.getAttribute('data-key');
+                    if (numRaw) {
+                        const displayNum = numRaw.replace(/[^0-9]/g, '');
+                        const qnumInt = parseInt(displayNum);
+                        if (!isNaN(qnumInt)) {
+                            const row = inp.closest('.question-row');
+                            const qId = row ? row.getAttribute('data-id') : null;
+                            extractedQuestions.set(qnumInt, { qid: qId, display: displayNum, dataKey: numRaw, type: 'blank' });
+                        }
+                    }
+                });
+
+                // Final Dot ID assignment logic
+                const sortedQuestionNums = Array.from(extractedQuestions.keys()).sort((a, b) => a - b);
+
+                sortedQuestionNums.forEach(num => {
+                    const info = extractedQuestions.get(num);
+                    const dot = document.createElement("div");
+                    dot.className = "nav-dot";
+                    // Use plain question number for range/blank types if possible for easier matching
+                    dot.id = "nav-" + (info.qnum || info.dataKey || info.qid);
+                    dot.textContent = "Q" + info.display;
+                    dot.title = "Question " + info.display;
+                    dot.onclick = (e) => {
+                        e.stopPropagation(); // Don't trigger tab click again
+                        scrollQ(info.qid, passageId, info.dataKey);
+                    }
+                    dotsContainer.appendChild(dot);
+                });
+            }
+        });
+
+        // Initially load progress once DOM matches
+        setTimeout(updatePartProgress, 50);
+
+        // Auto-resize blank inputs on load
+        document.querySelectorAll('input.blank-input').forEach(inp => {
+            if (inp.value || inp.placeholder) {
+                inp.style.width = Math.max(30, ((inp.value || inp.placeholder).length || 1) * 9 + 10) + 'px';
+            }
+        });
+    });
+
+    // --- HIGHLIGHT FEATURE LOGIC ---
+    let currentHighlightRange = null;
+    const highlightMenu = document.getElementById('highlight-tools');
+
+    document.addEventListener('mouseup', function (e) {
+        // Delay slightly to allow selection to finish
+        setTimeout(() => {
+            const selection = window.getSelection();
+            
+            // Only trigger within passage
+            const passagePanel = e.target.closest('.panel-passage');
+            if (!passagePanel || e.target.closest('#highlight-tools')) {
+                if (!e.target.closest('#highlight-tools')) {
+                    highlightMenu.style.display = 'none';
+                }
+                return;
+            }
+
+            if (selection && selection.toString().trim() !== "") {
+                currentHighlightRange = selection.getRangeAt(0);
+                const rect = currentHighlightRange.getBoundingClientRect();
+
+                // Show menu above selection
+                highlightMenu.style.display = 'flex';
+                highlightMenu.style.top = (rect.top + window.scrollY - 45) + 'px';
+                highlightMenu.style.left = (rect.left + window.scrollX + (rect.width / 2) - 60) + 'px';
+                highlightMenu.style.opacity = '1';
+            } else {
+                highlightMenu.style.display = 'none';
+            }
+        }, 10);
+    });
+
+    function applyHighlight(colorCode) {
+        if (!currentHighlightRange) return;
+
+        try {
+            const span = document.createElement("span");
+            span.className = "ielts-highlight";
+            span.style.setProperty('--hl-color', colorCode);
+            
+            // surroundContents can fail if it splits elements (e.g. bold tags)
+            // But for passages, it's usually fine. If it fails, we use fallback.
+            currentHighlightRange.surroundContents(span);
+        } catch (e) {
+            // Fallback for complex selections: extract and re-insert (lossy but works)
+            const span = document.createElement("span");
+            span.className = "ielts-highlight";
+            span.style.setProperty('--hl-color', colorCode);
+            span.appendChild(currentHighlightRange.extractContents());
+            currentHighlightRange.insertNode(span);
+        }
+
+        window.getSelection().removeAllRanges();
+        highlightMenu.style.display = 'none';
+        currentHighlightRange = null;
+    }
+
+    function removeHighlight() {
+        const selection = window.getSelection();
+        // Use either current selection or the range captured on mouseup
+        let range = (selection && selection.rangeCount > 0) ? selection.getRangeAt(0) : currentHighlightRange;
+        
+        if (!range) {
+            highlightMenu.style.display = 'none';
+            return;
+        }
+
+        let container = range.commonAncestorContainer;
+        let node = container.nodeType === 3 ? container.parentElement : container;
+        
+        let found = false;
+        // Trace up to find the highlight span
+        while (node && node !== document.body && node.id !== 'exam-form') {
+            if (node.classList && node.classList.contains('ielts-highlight')) {
+                const parent = node.parentNode;
+                // Move all children out of the highlight span
+                while (node.firstChild) {
+                    parent.insertBefore(node.firstChild, node);
+                }
+                parent.removeChild(node);
+                parent.normalize(); // Merge adjacent text nodes
+                found = true;
+                break;
+            }
+            node = node.parentElement;
+        }
+
+        window.getSelection().removeAllRanges();
+        highlightMenu.style.display = 'none';
+        currentHighlightRange = null;
+    }
+
+    // Hide highlight tools when scrolling the passage
+    document.querySelectorAll('.panel-passage').forEach(panel => {
+        panel.addEventListener('scroll', () => {
+            highlightMenu.style.display = 'none';
+        });
+
+        // NEW: Click highlighting to remove it
+        panel.addEventListener('click', (e) => {
+            const highlight = e.target.closest('.ielts-highlight');
+            if (highlight) {
+                // Remove highlight immediately
+                const parent = highlight.parentNode;
+                while (highlight.firstChild) {
+                    parent.insertBefore(highlight.firstChild, highlight);
+                }
+                parent.removeChild(highlight);
+                parent.normalize();
+                
+                // Prevent showing selection menu right after removal
+                highlightMenu.style.display = 'none';
+                window.getSelection().removeAllRanges();
+            }
+        });
+    });
+
+    // HEADER TOGGLING
+    function toggleHeader() {
+        document.body.classList.toggle('header-collapsed');
+    }
+
+    // RESIZABLE PANELS LOGIC
+    document.addEventListener('DOMContentLoaded', function() {
+        const containers = document.querySelectorAll('.exam-split-container');
+        
+        containers.forEach(container => {
+            const resizer = container.querySelector('.resizer');
+            const leftPanel = container.querySelector('.panel-passage');
+            
+            if (!resizer || !leftPanel) return;
+
+            let x = 0;
+            let leftWidth = 0;
+
+            const mouseDownHandler = function(e) {
+                x = e.clientX;
+                leftWidth = leftPanel.getBoundingClientRect().width;
+
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+                
+                resizer.classList.add('resizing');
+                document.body.style.cursor = 'col-resize';
+                // Prevent text selection while dragging
+                document.body.style.userSelect = 'none';
+            };
+
+            const mouseMoveHandler = function(e) {
+                const dx = e.clientX - x;
+                const newLeftWidth = ((leftWidth + dx) * 100 / container.getBoundingClientRect().width);
+                
+                // Constraints
+                if (newLeftWidth > 20 && newLeftWidth < 80) {
+                    leftPanel.style.width = `${newLeftWidth}%`;
+                }
+            };
+
+            const mouseUpHandler = function() {
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+                
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            };
+
+            resizer.addEventListener('mousedown', mouseDownHandler);
+        });
+    });
+
+    // Hide Locators [Q1], [Q2], etc. from the passage during exam
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.panel-passage').forEach(panel => {
+            // First: Clean {[ text ][=l1,2,3]} -> text
+            let content = panel.innerHTML;
+            const complexRegex = /\{\[\s*(.*?)\s*\]\[=l([\d,]+)\]\}/g;
+            content = content.replace(complexRegex, '$1');
+            panel.innerHTML = content; // Keep this line, it was in the original code.
+
+            // Second: Hide legacy [Q1] tags
+            const walk = document.createTreeWalker(panel, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            const nodesToProcess = [];
+            while (node = walk.nextNode()) {
+                if (/\[Q\d+\]/.test(node.textContent)) {
+                    nodesToProcess.push(node);
+                }
+            }
+
+            nodesToProcess.forEach(node => {
+                const parent = node.parentNode;
+                if (!parent) return; // Node might have been removed or replaced
+                
+                const text = node.textContent;
+                const parts = text.split(/(\[Q\d+\])/);
+                
+                const fragment = document.createDocumentFragment();
+                parts.forEach(part => {
+                    if (/\[Q\d+\]/.test(part)) {
+                        const span = document.createElement('span');
+                        span.style.display = 'none';
+                        span.className = 'exam-locator-hidden';
+                        span.textContent = part;
+                        fragment.appendChild(span);
+                    } else if (part) {
+                        fragment.appendChild(document.createTextNode(part));
+                    }
+                });
+                parent.replaceChild(fragment, node);
+            });
+        });
+    });
+
+    // --- MATCHING DRAG & DROP LOGIC ---
+    let activeDraftOption = null;
+
+    function selectDraftOption(el) {
+        if (activeDraftOption === el) {
+            el.classList.remove('selected-draft');
+            activeDraftOption = null;
+            return;
+        }
+        document.querySelectorAll('.matching-drag-item').forEach(e => e.classList.remove('selected-draft'));
+        el.classList.add('selected-draft');
+        activeDraftOption = el;
+    }
+
+    function placeDraftOption(zone) {
+        if (activeDraftOption) {
+            let val = activeDraftOption.getAttribute('data-val');
+            fillDropZone(zone, val);
+            activeDraftOption.classList.remove('selected-draft');
+            activeDraftOption = null;
+        } else {
+            if (zone.classList.contains('filled')) clearDropZone(zone);
+        }
+    }
+
+    function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+    function dragLeave(ev) { ev.currentTarget.classList.remove('drag-over'); }
+    
+    function drop(ev) {
+        ev.preventDefault();
+        const zone = ev.currentTarget;
+        zone.classList.remove('drag-over');
+        const val = ev.dataTransfer.getData("text/plain");
+        if (val) fillDropZone(zone, val);
+    }
+
+    document.addEventListener('dragstart', function(ev) {
+        if(ev.target.classList && ev.target.classList.contains('matching-drag-item')) {
+            ev.dataTransfer.setData("text/plain", ev.target.getAttribute('data-val'));
+            ev.target.style.opacity = '0.5';
+        }
+    });
+
+    document.addEventListener('dragend', function(ev) {
+        if(ev.target.classList && ev.target.classList.contains('matching-drag-item')) {
+            ev.target.style.opacity = '1';
+        }
+    });
+
+    function consumeOption(zone, val) {
+        const section = zone.closest('.section-container');
+        if (!section) return;
+        let items = section.querySelectorAll('.matching-drag-item:not(.used)');
+        for (let item of items) {
+            if (item.getAttribute('data-val') === val) {
+                item.classList.add('used');
+                item.style.display = 'none';
+                break;
+            }
+        }
+    }
+
+    function releaseOption(zone, val) {
+        const section = zone.closest('.section-container');
+        if (!section) return;
+        let items = section.querySelectorAll('.matching-drag-item.used');
+        for (let item of items) {
+            if (item.getAttribute('data-val') === val) {
+                item.classList.remove('used');
+                item.style.display = '';
+                break;
+            }
+        }
+    }
+
+    function fillDropZone(zone, val) {
+        let oldVal = zone.textContent.trim();
+        if (oldVal && oldVal !== 'Drop here') {
+            releaseOption(zone, oldVal);
+        }
+
+        zone.innerHTML = val;
+        zone.classList.add('filled');
+        let inputId = zone.getAttribute('data-input-target');
+        let inp = document.getElementById(inputId);
+        if(inp) {
+            inp.value = val;
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        consumeOption(zone, val);
+    }
+
+    function clearDropZone(zone) {
+        let oldVal = zone.textContent.trim();
+        if (oldVal && oldVal !== 'Drop here') {
+            releaseOption(zone, oldVal);
+        }
+
+        zone.innerHTML = '<span style="opacity:0.4; font-size:0.75rem;">Drop here</span>';
+        zone.classList.remove('filled');
+        let inputId = zone.getAttribute('data-input-target');
+        let inp = document.getElementById(inputId);
+        if(inp) {
+            inp.value = '';
+            inp.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+</script>
+{% endblock %}

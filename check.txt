@@ -1,0 +1,6 @@
+Title: Match
+Inst: <p>dfs</p>
+MatchOpts: gopa,rakib,raju,nopal
+QCount: 2
+QTexts: ['<p>name 1</p>', '<p>name 2</p>']
+QCount logic: 2

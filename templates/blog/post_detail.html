@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} | EduVillage Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate__animated animate__fadeIn">
+    <div class="col-lg-8">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4 mt-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'blog:post_list' %}" class="text-primary text-decoration-none fw-bold">Blog</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ post.category.name|default:"General" }}</li>
+            </ol>
+        </nav>
+
+        <!-- Post Header -->
+        <div class="mb-5">
+            <h1 class="display-5 fw-black text-dark mb-4 lh-base">{{ post.title }}</h1>
+            <div class="d-flex align-items-center gap-4 py-3 border-top border-bottom border-light">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px; background: var(--gradient-main);">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold small text-dark">{{ post.author.username }}</div>
+                        <div class="text-muted small" style="font-size: 0.7rem;">Curriculum Expert</div>
+                    </div>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-clock me-1 text-primary"></i> {{ post.created_at|date:"M d, Y" }}
+                </div>
+                <div class="ms-auto d-flex gap-2">
+                    <a href="#" class="btn btn-light btn-sm rounded-circle text-primary hover-scale"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="btn btn-light btn-sm rounded-circle text-success hover-scale"><i class="bi bi-whatsapp"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Image -->
+        {% if post.get_featured_image_url %}
+            <div class="rounded-4 overflow-hidden mb-5 shadow-sm border border-light p-1 bg-white">
+                <img src="{{ post.get_featured_image_url }}" class="img-fluid w-100 rounded-3" alt="{{ post.title }}">
+            </div>
+        {% endif %}
+
+        <!-- Content -->
+        <article class="blog-content text-secondary lh-lg mb-5" style="font-size: 1.1rem;">
+            {{ post.content|safe }}
+        </article>
+
+        <!-- Related Posts Section -->
+        {% if related_posts %}
+        <div class="pt-5 border-top border-light mb-5">
+            <h4 class="fw-bold mb-4 text-dark">আরও পড়ুন (Related Posts)</h4>
+            <div class="row g-4">
+                {% for rp in related_posts %}
+                <div class="col-md-4">
+                    <div class="premium-card p-0 overflow-hidden border-0 shadow-sm h-100 transition-all hover-up">
+                        <div class="bg-light" style="height: 120px; background-image: url('{{ rp.get_featured_image_url }}'); background-size: cover; background-position: center;"></div>
+                        <div class="p-3">
+                            <h6 class="fw-bold mb-2"><a href="{% url 'blog:post_detail' rp.slug %}" class="text-dark text-decoration-none small">{{ rp.title|truncatechars:40 }}</a></h6>
+                            <span class="text-muted small" style="font-size: 0.7rem;">{{ rp.created_at|date:"M d" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Comments Placeholder -->
+        <div class="premium-card p-5 border-0 text-center mb-5 shadow-sm" style="background: rgba(14, 165, 233, 0.05);">
+            <i class="bi bi-chat-dots-fill display-4 text-primary opacity-25"></i>
+            <h5 class="fw-bold mt-3 text-dark">Join the Conversation</h5>
+            <p class="text-muted">লগইন করে আপনার মতামত বা প্রশ্ন নিচে লিখুন।</p>
+            <a href="{% url 'account_login' %}" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm hover-up">Login to Comment</a>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .blog-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 20px;
+        margin: 30px 0;
+    }
+    .blog-content h2, .blog-content h3 {
+        color: #1e293b;
+        font-weight: 800;
+        margin-top: 40px;
+        margin-bottom: 20px;
+    }
+    .blog-content blockquote {
+        border-left: 5px solid var(--primary);
+        padding-left: 20px;
+        font-style: italic;
+        color: #475569;
+        margin: 30px 0;
+    }
+</style>
+{% endblock %}

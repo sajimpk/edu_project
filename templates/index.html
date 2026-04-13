@@ -1,0 +1,675 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Education Village | Premium IELTS Prep & AI-Powered Learning Hub{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --village-deep: #0f172a;
+        --village-teal: #10b981;
+        --village-indigo: #6366f1;
+        --village-text: #334155;
+    }
+
+    /* Modern Hero with Premium Image Background */
+    .premium-hero {
+        position: relative;
+        min-height: 85vh;
+        border-radius: 40px;
+        margin-bottom: 60px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        background: #0f172a;
+    }
+
+    .hero-img-overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: url('/static/images/village_bg.png') center/cover no-repeat;
+        opacity: 0.15;
+        z-index: 1;
+    }
+
+    .hero-glass-content {
+        position: relative;
+        z-index: 5;
+        width: 100%;
+        padding: 60px;
+    }
+
+    .hero-badge-v2 {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        padding: 8px 18px;
+        border-radius: 100px;
+        font-weight: 800;
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 25px;
+        display: inline-block;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .hero-main-title {
+        font-size: 4.5rem;
+        font-weight: 900;
+        color: white;
+        line-height: 1;
+        letter-spacing: -3px;
+        margin-bottom: 25px;
+    }
+
+    .hero-description {
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.7);
+        max-width: 600px;
+        margin-bottom: 45px;
+        line-height: 1.6;
+    }
+
+    /* Stats Grid */
+    .stat-card-premium {
+        background: white;
+        border-radius: 30px;
+        padding: 40px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card-premium:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.05);
+        border-color: var(--village-indigo);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+    }
+
+    /* Feature Visual Section */
+    .feature-img-box {
+        position: relative;
+        border-radius: 32px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Stylish Pricing Redesign */
+    .pricing-tier {
+        background: white;
+        border-radius: 36px;
+        padding: 45px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .tier-popular {
+        background: #0f172a;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        box-shadow: 0 40px 100px -15px rgba(15, 23, 42, 0.3);
+        transform: scale(1.05);
+        z-index: 2;
+        color: white;
+    }
+
+    .tier-popular .tier-price {
+        color: white;
+    }
+
+    .tier-popular .tier-price span {
+        color: #94a3b8;
+    }
+
+    .tier-popular .tier-feature-list li {
+        color: #e2e8f0;
+    }
+
+    .tier-popular h4 {
+        color: #10b981 !important;
+    }
+
+    .tier-popular .tier-btn {
+        background: #10b981 !important;
+        color: white !important;
+        border: none;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .tier-popular .tier-btn:hover {
+        background: #059669 !important;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.5);
+    }
+
+    .popular-tag {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(90deg, #10b981, #059669);
+        color: white;
+        padding: 6px 22px;
+        border-radius: 100px;
+        font-weight: 900;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .tier-price {
+        font-size: 3.5rem;
+        font-weight: 950;
+        letter-spacing: -2px;
+        color: var(--village-deep);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: baseline;
+        gap: 5px;
+    }
+
+    .tier-price span {
+        font-size: 1rem;
+        color: #94a3b8;
+        letter-spacing: 0;
+        font-weight: 700;
+    }
+
+    .tier-feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 40px 0;
+    }
+
+    .tier-feature-list li {
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+    }
+
+    .tier-feature-list li i {
+        font-size: 1.1rem;
+        color: #10b981;
+    }
+
+    .tier-btn {
+        width: 100%;
+        padding: 16px;
+        border-radius: 18px;
+        font-weight: 800;
+        transition: all 0.3s;
+        text-decoration: none;
+        text-align: center;
+        border: 2px solid #e2e8f0;
+        font-size: 1rem;
+        color: #1e293b;
+        display: block;
+        background: #f8fafc;
+    }
+
+    .tier-btn:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+
+    .btn-hero-primary {
+        background: #10b981;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white !important;
+        padding: 20px 48px;
+        border-radius: 20px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.4);
+        font-size: 1.1rem;
+    }
+
+    .btn-hero-primary:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-hero-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: white !important;
+        padding: 20px 48px;
+        border-radius: 20px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: all 0.4s;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 1.1rem;
+    }
+
+    .btn-hero-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-8px);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-upgrade {
+        background: var(--village-teal);
+        color: white !important;
+        border: none;
+        box-shadow: 0 15px 30px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-upgrade:hover {
+        background: #059669;
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Category & Steps Styling */
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 950;
+        letter-spacing: -2px;
+        margin-bottom: 50px;
+    }
+
+    .explore-card {
+        background: white;
+        border-radius: 30px;
+        padding: 35px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.4s;
+        text-align: center;
+        height: 100%;
+    }
+
+    .explore-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.05);
+        border-color: var(--village-teal);
+    }
+
+    .mission-section {
+        position: relative;
+        padding: 80px 0;
+        overflow: hidden;
+    }
+
+    .mission-section::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+        z-index: -1;
+    }
+
+    .step-pathway {
+        position: relative;
+    }
+
+    .step-pathway::before {
+        content: '';
+        position: absolute;
+        left: 29px;
+        top: 40px;
+        bottom: 40px;
+        width: 2px;
+        background: repeating-linear-gradient(to bottom, #e2e8f0 0, #e2e8f0 10px, transparent 10px, transparent 20px);
+        z-index: 0;
+    }
+
+    .step-box-v2 {
+        position: relative;
+        padding: 30px 40px 30px 90px;
+        background: white;
+        border-radius: 24px;
+        margin-bottom: 25px;
+        transition: all 0.4s;
+        border: 1px solid #f1f5f9;
+        z-index: 1;
+    }
+
+    .step-box-v2:hover {
+        transform: translateX(15px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.03);
+        border-color: var(--village-teal);
+    }
+
+    .step-num-v2 {
+        position: absolute;
+        left: 0;
+        top: 25px;
+        width: 60px;
+        height: 60px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        color: #64748b;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 950;
+        transition: all 0.4s;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+
+    .step-box-v2:hover .step-num-v2 {
+        background: var(--village-teal);
+        color: white;
+        border-color: var(--village-teal);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        transform: rotate(-10deg) scale(1.1);
+    }
+
+    .floating-status {
+        position: absolute;
+        background: white;
+        padding: 15px 25px;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 5;
+        animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+
+    @media (max-width: 992px) {
+        .hero-main-title { font-size: 3rem; }
+        .pricing-tier { transform: none !important; margin-bottom: 30px; }
+        .premium-hero { border-radius: 0; min-height: 70vh; }
+        .hero-glass-content { padding: 40px 20px; text-align: center; }
+        .hero-description { margin-left: auto; margin-right: auto; }
+        .section-title { font-size: 2.2rem; }
+    }
+</style>
+
+<div class="row">
+    <div class="col-12">
+        
+        <!-- Premium Hero -->
+        <section class="premium-hero">
+            <div class="hero-img-overlay"></div>
+            <div class="container hero-glass-content">
+                <div class="row align-items-center">
+                    <div class="col-lg-7">
+                        <div class="hero-badge-v2">WORLD CLASS EDUCATION v3.0</div>
+                        <h1 class="hero-main-title">Master Your <br><span style="color: var(--village-teal);">Ambition</span>.</h1>
+                        <p class="hero-description">
+                            The ultimate practice environment for IELTS, BCS, and HSC. 
+                            Advanced AI diagnostics, instant feedback, and the most comprehensive question database in Bangladesh.
+                        </p>
+                        <div class="d-flex flex-wrap gap-4 mt-2 justify-content-lg-start justify-content-center">
+                            <a href="{% url 'take_test' %}" class="btn-hero-primary">
+                                <i class="bi bi-play-fill"></i> Start Test
+                            </a>
+                            <a href="#plans" class="btn-hero-secondary">
+                                Premium Features
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Statistics -->
+        <section class="mb-5 pb-5 mt-n5 position-relative" style="z-index: 10;">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <a href="{% url 'take_test' %}" class="text-decoration-none">
+                            <div class="stat-card-premium">
+                                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                                    <i class="bi bi-database-fill"></i>
+                                </div>
+                                <h2 class="fw-black mb-1">150k+</h2>
+                                <p class="text-muted small mb-0 fw-bold">Validated Questions <i class="bi bi-arrow-right-short"></i></p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card-premium shadow-lg">
+                            <div class="stat-icon bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-cpu-fill"></i>
+                            </div>
+                            <h2 class="fw-black mb-1">98.4%</h2>
+                            <p class="text-muted small mb-0 fw-bold">AI Response Accuracy</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card-premium">
+                            <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-stars"></i>
+                            </div>
+                            <h2 class="fw-black mb-1">FREE</h2>
+                            <p class="text-muted small mb-0 fw-bold">Core Practice Sets</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pathways / Categories -->
+        <section class="mb-5 py-5 text-center">
+            <h2 class="section-title">Explore Your <span class="text-teal-600">Pathway</span></h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="explore-card">
+                        <div class="stat-icon mx-auto bg-teal-50 text-teal-600 mb-4">
+                            <i class="bi bi-book-half"></i>
+                        </div>
+                        <h4 class="fw-black mb-3">IELTS Mastery</h4>
+                        <p class="text-muted small mb-4">Cambridge standard mock tests, real-time band scores, and AI reading hub.</p>
+                        <a href="{% url 'ielts:reading_home' %}" class="btn btn-sm btn-outline-teal rounded-pill px-4 fw-bold">Explore Hub</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="explore-card">
+                        <div class="stat-icon mx-auto bg-indigo-50 text-indigo-600 mb-4">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <h4 class="fw-black mb-3">SSC / HSC Prep</h4>
+                        <p class="text-muted small mb-4">Board-standard MCQ banks and AI-generated tests for all academic subjects.</p>
+                        <a href="{% url 'take_test' %}" class="btn btn-sm btn-outline-indigo rounded-pill px-4 fw-bold">Start Practice</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="explore-card">
+                        <div class="stat-icon mx-auto bg-amber-50 text-amber-600 mb-4">
+                            <i class="bi bi-bank2"></i>
+                        </div>
+                        <h4 class="fw-black mb-3">Uni. Admission</h4>
+                        <p class="text-muted small mb-4">Specialized sets for Medical, Engineering and General Varsity exams.</p>
+                        <a href="{% url 'take_test' %}" class="btn btn-sm btn-outline-warning rounded-pill px-4 fw-bold">Get Started</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resource Hub Section (Linking Books & Blog) -->
+        <section class="mb-5 py-5 border-top border-bottom border-light">
+            <div class="row align-items-center">
+                <div class="col-lg-4 text-center text-lg-start mb-4 mb-lg-0">
+                    <h2 class="fw-black text-dark mb-2">Resource Hub</h2>
+                    <p class="text-muted mb-0">Free study material and expert advice.</p>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-3">
+                        {% comment %} <div class="col-md-6">
+                            <a href="{% url 'books' %}" class="text-decoration-none">
+                                <div class="bg-white p-4 rounded-4 shadow-sm border border-light d-flex align-items-center gap-3 hover-lift">
+                                    <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary"><i class="bi bi-book fs-3"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Cambridge Book Links</h6>
+                                        <p class="small text-muted mb-0">Download PDF resources for free.</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div> {% endcomment %}
+                        <div class="col-md-6">
+                            <a href="{% url 'blog:post_list' %}" class="text-decoration-none">
+                                <div class="bg-white p-4 rounded-4 shadow-sm border border-light d-flex align-items-center gap-3 hover-lift">
+                                    <div class="bg-success bg-opacity-10 p-2 rounded-3 text-success"><i class="bi bi-newspaper fs-3"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Latest Articles</h6>
+                                        <p class="small text-muted mb-0">Tips and tricks for board exams.</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works / Mission Control Redesigned -->
+        <section class="mission-section">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-5">
+                    <h2 class="section-title text-lg-start text-center">Mission <br><span class="text-teal-600">Control</span>.</h2>
+                    <p class="text-muted text-lg-start text-center mb-5">Getting started with Education Village is effortless. Follow our optimized learning path to reach your goals.</p>
+                    
+                    <div class="step-pathway">
+                        <div class="step-box-v2">
+                            <div class="step-num-v2">01</div>
+                            <div class="step-content">
+                                <h5>Select Your Target</h5>
+                                <p class="mb-0">Choose your subject or exam type from our vast database of verified content.</p>
+                            </div>
+                        </div>
+                        <div class="step-box-v2">
+                            <div class="step-num-v2">02</div>
+                            <div class="step-content">
+                                <h5>Simulation & Analysis</h5>
+                                <p class="mb-0">Complete your mock test under exam conditions while our AI tracks every move.</p>
+                            </div>
+                        </div>
+                        <div class="step-box-v2 mb-0">
+                            <div class="step-num-v2">03</div>
+                            <div class="step-content">
+                                <h5>Review & Evolve</h5>
+                                <p class="mb-0">Get instant results and deep AI diagnostics to fix your weak points immediately.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="feature-img-box position-relative">
+                        <!-- Floating Badges -->
+                        <div class="floating-status" style="top: 10%; right: -5%;">
+                            <div class="bg-success p-2 rounded-circle"></div>
+                            <span class="fw-bold small">Direct Accuracy: 98%</span>
+                        </div>
+                        <div class="floating-status" style="bottom: 15%; left: -10%; animation-delay: 1s;">
+                            <div class="bg-primary p-2 rounded-circle"></div>
+                            <span class="fw-bold small">150k+ Questions</span>
+                        </div>
+
+                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Learning Environment" class="rounded-5 shadow-2xl">
+                        
+                        <div class="position-absolute top-50 start-50 translate-middle">
+                            <div class="bg-white p-4 rounded-5 shadow-2xl d-flex align-items-center gap-3">
+                                <div class="bg-teal-500 text-white p-3 rounded-4"><i class="bi bi-play-circle-fill fs-3"></i></div>
+                                <div>
+                                    <h6 class="fw-black mb-0">Watch How It Works</h6>
+                                    <p class="small text-muted mb-0">2 Minute Overview</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="plans" class="mb-5 py-5 bg-light rounded-5 p-4 p-lg-5">
+            <div class="text-center mb-5 pb-3">
+                <h2 class="display-6 fw-black text-dark">Investment in Your Future</h2>
+                <p class="text-muted">Choose the perfect plan to reach your goals faster.</p>
+            </div>
+            <div class="row g-4 justify-content-center">
+                {% for plan in plans %}
+                <div class="col-md-5 col-lg-4">
+                    <div class="pricing-tier {% if plan.plan_type == 'Yearly' %}tier-popular{% endif %}">
+                        {% if plan.plan_type == 'Yearly' %}
+                        <div class="popular-tag">MOST TRUSTED</div>
+                        {% endif %}
+                        <div>
+                            <h4 class="fw-bold mb-1 {% if plan.price > 0 %}text-teal-600{% endif %}">{{ plan.name }}</h4>
+                            <div class="tier-price">
+                                ৳{{ plan.price|floatformat:0 }} 
+                                <span>/ 
+                                    {% if plan.plan_type == 'Monthly' %}Month
+                                    {% elif plan.plan_type == 'Yearly' %}Year
+                                    {% elif plan.plan_type == 'Free' %}Forever
+                                    {% else %}One-time{% endif %}
+                                </span>
+                            </div>
+                            
+                            <ul class="tier-feature-list">
+                                {% for feature in plan.feature_list %}
+                                <li>
+                                    <i class="bi {% if plan.price > 0 %}bi-patch-check-fill{% else %}bi-check2{% endif %}"></i> 
+                                    {{ feature }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% if plan.price == 0 %}
+                        <a href="{% url 'account_signup' %}" class="tier-btn">Start Practice</a>
+                        {% else %}
+                        <a href="{% url 'upgrade' %}" class="tier-btn btn-upgrade">Upgrade Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center text-muted">
+                    No active subscription plans found.
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </div>
+</div>
+{% endblock %}

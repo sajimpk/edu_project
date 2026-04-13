@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}IELTS Reading Hub | Practice & Mock Tests - Education Village{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --reading-primary: #4f46e5;
+        --reading-secondary: #818cf8;
+        --reading-bg: #f8fafc;
+        --reading-card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .reading-hub-hero {
+        background: radial-gradient(circle at 0% 0%, #1e1b4b 0%, #0f172a 100%);
+        border-radius: 24px;
+        padding: 40px 40px;
+        color: white;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(129, 140, 248, 0.2);
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.4);
+    }
+
+    .reading-hub-hero::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 L40 0 M-1 1 L1 -1 M39 41 L41 39' stroke='rgba(255,255,255,0.03)' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+    }
+
+    .hub-badge {
+        background: rgba(79, 70, 229, 0.1);
+        color: #818cf8;
+        padding: 4px 12px;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        margin-bottom: 15px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .hub-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: #818cf8;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #818cf8;
+    }
+
+    .hub-title {
+        font-size: 2.25rem;
+        font-weight: 900;
+        margin-bottom: 15px;
+        letter-spacing: -0.5px;
+        line-height: 1.1;
+    }
+
+    .hub-subtitle {
+        font-size: 0.95rem;
+        opacity: 0.6;
+        max-width: 500px;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    /* Unique Navigation Tabs */
+    .hub-nav {
+        display: flex;
+        gap: 12px;
+        background: white;
+        padding: 8px;
+        border-radius: 20px;
+        box-shadow: var(--reading-card-shadow);
+        margin-bottom: 40px;
+        border: 1px solid #f1f5f9;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hub-nav-btn {
+        padding: 12px 24px;
+        border-radius: 14px;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .hub-nav-btn i {
+        font-size: 1.1rem;
+    }
+
+    .hub-nav-btn:hover {
+        color: var(--reading-primary);
+        background: #f1f5f9;
+    }
+
+    .hub-nav-btn.active {
+        background: var(--reading-primary);
+        color: white;
+        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Elegant Test Card */
+    .reading-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid #f1f5f9;
+        transition: all 0.4s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: var(--reading-card-shadow);
+    }
+
+    .reading-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.1);
+        border-color: var(--reading-primary);
+    }
+
+    .card-top {
+        padding: 30px;
+        background: #fafafa;
+        border-bottom: 1px solid #f1f5f9;
+        position: relative;
+    }
+
+    .type-tag {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-size: 0.65rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 800;
+        text-transform: uppercase;
+        background: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .card-meta {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .meta-pill {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .card-bottom {
+        padding: 30px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .progress-bar-custom {
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 1s ease;
+    }
+
+    .btn-hub-launch {
+        width: 100%;
+        padding: 14px;
+        border-radius: 14px;
+        border: none;
+        font-weight: 800;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+        margin-top: 25px;
+    }
+
+    .btn-hub-primary {
+        background: var(--reading-primary);
+        color: white !important;
+        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+    }
+
+    .btn-hub-primary:hover {
+        background: #4338ca;
+        transform: scale(1.02);
+    }
+
+    .btn-hub-success {
+        background: #10b981;
+        color: white !important;
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-hub-success:hover {
+        background: #059669;
+        transform: scale(1.02);
+    }
+
+    @media (max-width: 768px) {
+        .reading-hub-hero {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .hub-title {
+            font-size: 2.2rem;
+        }
+        .hub-nav {
+            flex-direction: column;
+            width: 100%;
+        }
+        .hub-nav-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        
+        <!-- Premium Hub Hero -->
+        <div class="reading-hub-hero">
+            <div class="row align-items-center position-relative" style="z-index: 5;">
+                <div class="col-lg-8">
+                    <div class="hub-badge">SYSTEM_ACTIVE</div>
+                    <h1 class="hub-title">Reading <span style="color: #818cf8;">CORE</span>.net</h1>
+                    <p class="hub-subtitle">
+                        Neural reading simulations and high-fidelity mock data. Master the module with real-time AI analytics.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end d-none d-lg-block">
+                    <div class="text-white opacity-25 fw-black" style="font-size: 3rem; line-height: 1; letter-spacing: -2px;">V2.0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Smart Navigation -->
+        <div class="hub-nav">
+            <button class="hub-nav-btn active ielts-filter-btn" data-filter="all">
+                <i class="bi bi-grid-fill"></i> All Sessions
+            </button>
+            <button class="hub-nav-btn ielts-filter-btn" data-filter="cambridge">
+                <i class="bi bi-mortarboard-fill"></i> Cambridge Mock
+            </button>
+            <button class="hub-nav-btn ielts-filter-btn" data-filter="recent">
+                <i class="bi bi-book-half"></i> Passage Practice
+            </button>
+        </div>
+
+        {% if full_mocks or quick_tests %}
+        <div id="ieltsTestGrid">
+            <!-- Cambridge Style Section -->
+            {% if full_mocks %}
+            <div class="mb-5" id="fullMocksSection">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h3 class="fw-black text-dark mb-0 d-flex align-items-center">
+                        <i class="bi bi-award-fill text-primary me-2"></i> Full Mocks Tests
+                    </h3>
+                    <span class="badge bg-light text-dark border rounded-pill px-3">{{ full_mocks|length }} Available</span>
+                </div>
+                <div class="row g-4">
+                    {% for info in full_mocks %}
+                    {% with test=info.test %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="reading-card">
+                            <div class="card-top">
+                                <span class="type-tag text-primary">Cambridge</span>
+                                <h4 class="fw-black text-dark mb-1 text-truncate" title="{{ test.title }}">{{ test.title }}</h4>
+                                <div class="card-meta">
+                                    <div class="meta-pill"><i class="bi bi-clock"></i> {{ test.duration_minutes }}m</div>
+                                    <div class="meta-pill"><i class="bi bi-file-text"></i> 40 Qs</div>
+                                </div>
+                            </div>
+                            <div class="card-bottom">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small fw-bold">Mastery Level</span>
+                                        <span class="fw-bold text-primary small">{{ info.pct }}%</span>
+                                    </div>
+                                    <div class="progress-bar-custom">
+                                        <div class="progress-fill bg-primary" style="width: {{ info.pct }}%"></div>
+                                    </div>
+                                </div>
+                                <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#practiceModal{{ test.id }}" class="btn-hub-launch btn-hub-primary">
+                                    {% if not user.is_authenticated %}<i class="bi bi-lock-fill"></i> Preview Mode
+                                    {% elif info.label == 'Review' %}<i class="bi bi-layer-forward"></i> Review Results
+                                    {% elif info.label == 'Resume' %}<i class="bi bi-play-circle"></i> Resume Test
+                                    {% else %}<i class="bi bi-rocket-takeoff"></i> Take Test{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Single Passage Style Section -->
+            {% if quick_tests %}
+            <div class="mb-5" id="recentTestsSection">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h3 class="fw-black text-dark mb-0 d-flex align-items-center">
+                        <i class="bi bi-file-text-fill text-success me-2"></i>Passage Practice
+                    </h3>
+                    <span class="badge bg-light text-dark border rounded-pill px-3">{{ quick_tests|length }} Available</span>
+                </div>
+                <div class="row g-4">
+                    {% for info in quick_tests %}
+                    {% with test=info.test %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="reading-card">
+                            <div class="card-top" style="background: #f0fdf4;">
+                                <span class="type-tag text-success">Passage</span>
+                                <h4 class="fw-black text-dark mb-1 text-truncate" title="{{ test.title }}">{{ test.title }}</h4>
+                                <div class="card-meta">
+                                    <div class="meta-pill"><i class="bi bi-clock text-success"></i> {{ test.duration_minutes }}m</div>
+                                    <div class="meta-pill"><i class="bi bi-lightning text-success"></i> Short Form</div>
+                                </div>
+                            </div>
+                            <div class="card-bottom">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted small fw-bold">Success Rate</span>
+                                        <span class="fw-bold text-success small">{{ info.pct }}%</span>
+                                    </div>
+                                    <div class="progress-bar-custom">
+                                        <div class="progress-fill bg-success" style="width: {{ info.pct }}%"></div>
+                                    </div>
+                                </div>
+                                <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#practiceModal{{ test.id }}" class="btn-hub-launch btn-hub-success">
+                                    {% if not user.is_authenticated %}<i class="bi bi-lock-fill"></i> Preview
+                                    {% elif info.label == 'Review' %}<i class="bi bi-eye"></i> Results
+                                    {% elif info.label == 'Resume' %}<i class="bi bi-play"></i> Resume
+                                    {% else %}<i class="bi bi-lightning-charge"></i> Start Practice{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Modals for all tests -->
+        {% for info in full_mocks|add:quick_tests %}
+        {% with test=info.test %}
+        <div class="modal fade" id="practiceModal{{ test.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-premium shadow-2xl">
+                    <div class="modal-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="bg-primary bg-opacity-10 p-4 rounded-circle d-inline-block mb-3">
+                                <i class="bi bi-journal-check fs-1 text-primary"></i>
+                            </div>
+                            <h4 class="fw-black mb-1">{{ test.title }}</h4>
+                            <p class="text-muted small">IELTS Examination Mode</p>
+                        </div>
+                        <div class="bg-light p-4 rounded-4 mb-4">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="small text-muted mb-1">Time Limit</div>
+                                    <div class="fw-bold">{{ test.duration_minutes }} Min</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small text-muted mb-1">Total Passages</div>
+                                    <div class="fw-bold">{{ test.passages.count }} Sections</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-3">
+                            <a href="{{ info.url }}" class="btn btn-primary btn-lg w-100 py-3 d-flex align-items-center justify-content-center rounded-4 fw-bold">
+                                <i class="bi bi-play-fill me-2"></i>{% if not user.is_authenticated %}Enter Preview{% else %}Begin Simulation{% endif %}
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary py-3 rounded-4 border-0" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+
+        {% else %}
+        <div class="reading-card text-center py-5 border-0 shadow-none bg-transparent">
+            <i class="bi bi-journals display-1 text-muted opacity-10"></i>
+            <h4 class="fw-bold mt-4">Module Database Empty</h4>
+            <p class="text-muted">We are currently updating our reading archives.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('.ielts-filter-btn');
+    const fullMocksSection = document.getElementById('fullMocksSection');
+    const recentTestsSection = document.getElementById('recentTestsSection');
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+
+            // Toggle Button Classes
+            filterButtons.forEach(b => {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            // Show/Hide Sections
+            if (filter === 'all') {
+                if (fullMocksSection) fullMocksSection.classList.remove('d-none');
+                if (recentTestsSection) recentTestsSection.classList.remove('d-none');
+            } else if (filter === 'cambridge') {
+                if (fullMocksSection) fullMocksSection.classList.remove('d-none');
+                if (recentTestsSection) recentTestsSection.classList.add('d-none');
+            } else if (filter === 'recent') {
+                if (fullMocksSection) fullMocksSection.classList.add('d-none');
+                if (recentTestsSection) recentTestsSection.classList.remove('d-none');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
