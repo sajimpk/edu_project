@@ -1,0 +1,189 @@
+/* Custom Admin CSS for a compact and clean UI */
+
+body {
+    font-size: 0.85rem !important;
+    /* Smaller baseline font */
+}
+
+/* Make side menu more compact */
+.nav-sidebar .nav-link {
+    padding: 0.4rem 0.8rem !important;
+}
+
+/* Refine input field alignment and sizes */
+.form-group {
+    margin-bottom: 0.75rem !important;
+}
+
+.form-control,
+.select2-container--default .select2-selection--single {
+    height: calc(1.8rem + 2px) !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.85rem !important;
+}
+
+/* Adjust CKEditor container to avoid being too small but stay aligned */
+.django-ckeditor-widget {
+    width: 100% !important;
+}
+
+/* Compact Nested Inlines */
+.djn-module {
+    padding: 10px !important;
+    border: 1px solid #eee !important;
+    border-radius: 4px !important;
+    margin-bottom: 10px !important;
+}
+
+.djn-inline-form {
+    background: #fdfdfd !important;
+    border-left: 3px solid #007bff !important;
+    padding: 15px !important;
+    margin-bottom: 15px !important;
+}
+
+/* Correct label alignment for stacked fields */
+label {
+    font-weight: 600 !important;
+    margin-bottom: 3px !important;
+    color: #444 !important;
+}
+
+/* Better table spacing for mobile/responsive */
+.table td,
+.table th {
+    padding: 0.5rem !important;
+    vertical-align: middle !important;
+}
+
+/* Fix "Options" headers appearing above inputs */
+.vTextField,
+.vLargeTextField {
+    width: 95% !important;
+}
+
+/* Change form formatting for horizontal tabs context */
+.nav-tabs .nav-link {
+    font-size: 0.85rem !important;
+    padding: 10px 15px !important;
+}
+
+/* Unique and stylish page headings */
+.content-header h1 {
+    font-size: 1.35rem !important;
+    font-weight: 700 !important;
+    color: #2c3e50 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+/* Smooth breadcrumb alignment */
+.content-header .breadcrumb {
+    font-size: 0.8rem !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin-top: 5px !important;
+}
+
+/* Stylish card titles */
+.card-header .card-title {
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    color: #34495e !important;
+}
+
+/* Nested Admin Group Headings (e.g., "Questions", "Question Sections") */
+.inline-group h2,
+.inline-group>fieldset>h2 {
+    font-size: 1.0rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    padding: 6px 10px !important;
+    border-radius: 4px;
+    margin-bottom: 8px !important;
+    text-transform: capitalize;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Fix huge inline item headers (e.g., "Option (MCQ...): #1", "Question: #1") */
+.djn-group>.djn-item>h3,
+.djn-group>.djn-item>h2,
+.djn-item>h3,
+.djn-item>h2 {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    background: #f1f2f6 !important;
+    color: #333 !important;
+    padding: 5px 10px !important;
+    margin-bottom: 10px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-radius: 4px;
+    box-shadow: none !important;
+}
+
+/* Fix massive Remove/Delete button */
+.djn-item>h3 .delete,
+.djn-item>h2 .delete {
+    float: none !important;
+}
+
+.djn-item>h3 .inline-deletelink,
+.djn-item>h2 .inline-deletelink {
+    font-size: 0.75rem !important;
+    padding: 2px 8px !important;
+    line-height: 1.5 !important;
+    height: auto !important;
+    border-radius: 3px !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    background-color: #e74c3c !important;
+    color: white !important;
+}
+
+/* Force Horizontal layout for Stacked fields */
+fieldset.module .form-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+    padding: 5px 0 !important;
+    border-bottom: none !important;
+}
+
+fieldset.module .form-row>div {
+    flex: 1 !important;
+    min-width: 120px !important;
+    padding: 0 5px !important;
+    margin: 0 !important;
+    border-right: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+}
+
+fieldset.module .form-row label {
+    display: block !important;
+    margin-bottom: 4px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+}
+
+/* Fix boolean/checkbox alignment */
+fieldset.module .form-row .checkbox-row {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+}
+
+fieldset.module .form-row .checkbox-row label {
+    margin-bottom: 0 !important;
+}

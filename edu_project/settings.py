@@ -15,6 +15,11 @@ import os
 from dotenv import load_dotenv
 
 import socket
+import mimetypes
+
+# Fix Windows registry MIME types for CSS and JS
+mimetypes.add_type("text/css", ".css", True)
+mimetypes.add_type("text/javascript", ".js", True)
 
 # Patch to force IPv4 (Fixes "Network is unreachable" on servers)
 original_getaddrinfo = socket.getaddrinfo
@@ -200,6 +205,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # ==========================================
 # 📦 WHITENOISE - Production Static Files
