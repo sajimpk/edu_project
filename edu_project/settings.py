@@ -59,7 +59,10 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = [
     "https://eduvillage.online",
     "https://www.eduvillage.online",
-    *[f"https://{h}" for h in host]
+    "http://eduvillage.online",
+    "http://www.eduvillage.online",
+    *[f"https://{h}" for h in host],
+    *[f"http://{h}" for h in host]
 ]
 # Application definition
 
@@ -323,8 +326,9 @@ ACCOUNT_LOGIN_ON_SIGNUP = True # Allow login immediately in case email fails
 ACCOUNT_ADAPTER = 'users.adapter.MyAccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'users.adapter.MySocialAccountAdapter'
 SOCIALACCOUNT_LOGIN_ON_GET = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
 # Social Account Providers
 
 SOCIALACCOUNT_PROVIDERS = {
