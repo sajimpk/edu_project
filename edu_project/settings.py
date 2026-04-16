@@ -40,7 +40,7 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0qtv8zk_mev0a_18znc%tobp8qbyz2hin=6yjq=6up02%rd%4c'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-0qtv8zk_mev0a_18znc%tobp8qbyz2hin=6yjq=6up02%rd%4c')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
@@ -328,7 +328,7 @@ SOCIALACCOUNT_ADAPTER = 'users.adapter.MySocialAccountAdapter'
 SOCIALACCOUNT_LOGIN_ON_GET = True
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-SECURE_SSL_REDIRECT = not DEBUG
+SECURE_SSL_REDIRECT = False  # Disabled to prevent redirect loop with Nginx/Cloudflare
 # Social Account Providers
 
 SOCIALACCOUNT_PROVIDERS = {
